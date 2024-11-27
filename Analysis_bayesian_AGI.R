@@ -165,7 +165,6 @@ fit$water_contact3
 
 loo(m3, m4)
 
-# Monotonic predictor still fits better
 
 # Compare to # Compare to model with highest single sample E. coli 
 
