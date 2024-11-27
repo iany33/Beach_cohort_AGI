@@ -10,10 +10,7 @@ pacman::p_load(
   tidybayes, 
   bayesplot,
   marginaleffects,
-  cmdstanr,
-  modelr,
-  patchwork,
-  viridis
+  cmdstanr
 )
 
 # Start with AGI outcome, first build model with no confounders then add confounders
@@ -190,9 +187,10 @@ conditional_effects(m4.1, effects = "water_contact3")
 
 loo(m4, m4.1)
 
-# Compare to model with turbidity instead of E. coli
 
-m4.2 <- brm(agi3 ~ mo(water_contact3)*turbidity_s + age4 + gender + education2 + ethnicity + cond_GI + 
+# Compare to model with MST human sewage biomarker instead of E. coli
+
+m4.2 <- brm(agi3 ~ mo(water_contact3)*mst_human_s + age4 + gender + education2 + ethnicity + cond_GI + 
               other_rec_act + beach_exp_food + sand_contact + household_group +
               (1 | beach/recruit_date),
             family = bernoulli, data = data_follow, prior = priors2,
@@ -205,10 +203,17 @@ plot(m4.2)
 pp_check(m4.2, ndraws=100)
 pp_check(m4.2, type = "stat", stat = "mean")
 
-conditional_effects(m4.2, effects = "turbidity_s:water_contact3")
+conditional_effects(m4.2, effects = "mst_human_s:water_contact3")
 conditional_effects(m4.2, effects = "water_contact3")
 
-loo(m4, m4.1, m4.2)
+# Reproduce other models with same number of observations for LOO comparison
+
+data_follow_mst <- data_follow |> 
+  drop_na(any_of("e_coli_s", "mst_human_s"))
+
+m4_comp <- update(m4, newdata = data_follow_mst)
+
+loo(m4_comp, m4.2)
 
 
 ### Negative control analysis - E. coli
