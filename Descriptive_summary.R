@@ -38,7 +38,7 @@ old <- options(pillar.sigfig = 5)
 
 data |> 
   distinct(recruit_date, .keep_all=TRUE) |> 
-  get_summary_stats(e_coli, e_coli_max, turbidity) 
+  get_summary_stats(e_coli, e_coli_max, entero_cce, entero_cce_max, turbidity) 
 
 # Histograms
 
@@ -47,9 +47,13 @@ data |> group_by(date) |> ggplot(aes(x = e_coli_s)) + geom_histogram()
 data |> group_by(date) |> ggplot(aes(x = log_e_coli)) + geom_histogram()
 data |> group_by(date) |> ggplot(aes(x = log_e_coli_s)) + geom_histogram()
 
+data |> group_by(date) |> ggplot(aes(x = e_coli_max)) + geom_histogram()
+data |> group_by(date) |> ggplot(aes(x = entero_cce)) + geom_histogram()
+data |> group_by(date) |> ggplot(aes(x = entero_cce_max)) + geom_histogram()
+
 data |> group_by(date) |> ggplot(aes(x = turbidity)) + geom_histogram()
 
-# Examine E. coli results by beach
+# Examine FIB results by beach
 
 data |>
   ggplot(aes(x = beach, y = e_coli, fill = beach)) +
@@ -69,13 +73,25 @@ data |>
   labs(y = "E. coli highest single sample (CFU / 100 mL)", x = "Beach") + 
   theme(legend.position = "none")
 
-# Examine MST results
+data |>
+  filter(site != "Toronto") |> 
+  ggplot(aes(x = beach, y = entero_cce, fill = beach)) +
+  geom_violin() +
+  geom_boxplot(width = 0.4, color="grey", alpha = 0.2) +
+  scale_fill_viridis(discrete = TRUE) +
+  theme_minimal() +
+  labs(y = "Enterococci geometric mean (CCE / 100 mL)", x = "Beach") + 
+  theme(legend.position = "none")
 
-data |> 
-  select(mst_human2, mst_gull2, date) |> 
-  distinct(date, .keep_all=TRUE) |> 
-  tbl_summary(digits = list(all_categorical() ~ c(0, 1)),
-              type = all_categorical() ~ "categorical")
+data |>
+  filter(site != "Toronto") |> 
+  ggplot(aes(x = beach, y = entero_cce_max, fill = beach)) +
+  geom_violin() +
+  geom_boxplot(width = 0.4, color="grey", alpha = 0.2) +
+  scale_fill_viridis(discrete = TRUE) +
+  theme_minimal() +
+  labs(y = "Enterococci highest single sample (CCE / 100 mL)", x = "Beach") + 
+  theme(legend.position = "none")
 
 # Examine water contact and AGI outcome relationship
 
@@ -95,16 +111,6 @@ data_follow |>
   facet_grid(~water_contact2)
 
 data_follow |> 
-  ggplot(aes(x = agi3, y = log_e_coli, fill = agi3)) +
-  geom_violin() +
-  geom_boxplot(width = 0.1) +
-  theme(legend.position = "none") +
-  scale_fill_viridis_d(option = "cividis") +
-  labs(x = "Acute gastrointestinal illness (AGI)",
-       y = "Log E. coli geometric mean") +
-  facet_grid(~water_contact2)
-
-data_follow |> 
   ggplot(aes(x = agi3, y = e_coli_max, fill = agi3)) +
   geom_violin() +
   geom_boxplot(width = 0.1) +
@@ -112,6 +118,26 @@ data_follow |>
   scale_fill_viridis_d(option = "cividis") +
   labs(x = "Acute gastrointestinal illness (AGI)",
        y = "E. coli highest single sample") +
+  facet_grid(~water_contact2)
+
+data_follow |> 
+  ggplot(aes(x = agi3, y = entero_cce, fill = agi3)) +
+  geom_violin() +
+  geom_boxplot(width = 0.1) +
+  theme(legend.position = "none") +
+  scale_fill_viridis_d(option = "cividis") +
+  labs(x = "Acute gastrointestinal illness (AGI)",
+       y = "Enterococci geometric mean") +
+  facet_grid(~water_contact2)
+
+data_follow |> 
+  ggplot(aes(x = agi3, y = entero_cce_max, fill = agi3)) +
+  geom_violin() +
+  geom_boxplot(width = 0.1) +
+  theme(legend.position = "none") +
+  scale_fill_viridis_d(option = "cividis") +
+  labs(x = "Acute gastrointestinal illness (AGI)",
+       y = "Enterococci highest single sample") +
   facet_grid(~water_contact2)
 
 data_follow |> 
