@@ -14,8 +14,8 @@ pacman::p_load(
 )
 
 # Start with AGI outcome, first build model with no confounders then add confounders
-# Varying-effects for date, household, beach (hierarchical) - ignore site as 4th level for now
-# Use weakly informative priors for water contact; standard 0,1 Normal prior for other covariates
+# Varying-effects for date, household, beach (hierarchical) 
+# Use weakly informative priors for water contact
 
 get_prior(agi3 ~ water_contact2 + (1 | beach/recruit_date/house_id), 
           family = bernoulli, data = data_follow)
@@ -83,7 +83,7 @@ loo(m1, m1.2)
 
 # Monotonic version fits better
 
-### Add E. coli variable with interaction
+### Add E. coli variable with interaction (logged version)
 
 m2 <- brm(agi3 ~ mo(water_contact3)*e_coli_s + (1 | beach/recruit_date/house_id),
           family = bernoulli, data = data_follow, prior = priors2,
@@ -114,7 +114,7 @@ plot(m2.1)
 pp_check(m2.1, ndraws=100)
 pp_check(m2.1, type = "stat", stat = "mean")
 
-conditional_effects(m2.1, effects = "e_coli_s:water_contact3")
+conditional_effects(m2.1, effects = "e_coli_s")
 conditional_effects(m2.1, effects = "water_contact3")
 
 loo(m2, m2.1)
@@ -165,15 +165,14 @@ fit$water_contact3
 
 loo(m3, m4)
 
+# Compare to model with site included as a third hierarchical varying effect
 
-# Compare to # Compare to model with highest single sample E. coli 
-
-m4.1 <- brm(agi3 ~ mo(water_contact3)*e_coli_max_s + age4 + gender + education2 + ethnicity + cond_GI + 
-              other_rec_act + beach_exp_food + sand_contact + household_group + 
-              (1 | beach/recruit_date),
-            family = bernoulli, data = data_follow, prior = priors2,
-            iter = 2000, chains = 4, cores = 4, warmup = 1000, seed = 123, control = list(adapt_delta = 0.95),
-            backend = "cmdstanr", stan_model_args = list(stanc_options = list("O1")))
+m4.1 <- brm(agi3 ~ mo(water_contact3)*e_coli_s + age4 + gender + education2 + ethnicity + cond_GI + 
+            other_rec_act + beach_exp_food + sand_contact + household_group +
+            (1 | site/beach/recruit_date),
+          family = bernoulli, data = data_follow, prior = priors2,
+          iter = 2000, chains = 4, cores = 4, warmup = 1000, seed = 123, control = list(adapt_delta = 0.95),
+          backend = "cmdstanr", stan_model_args = list(stanc_options = list("O1")))
 
 summary(m4.1, robust = TRUE)
 get_variables(m4.1)
@@ -181,38 +180,104 @@ plot(m4.1)
 pp_check(m4.1, ndraws=100)
 pp_check(m4.1, type = "stat", stat = "mean")
 
-conditional_effects(m4.1, effects = "e_coli_max_s:water_contact3")
-conditional_effects(m4.1, effects = "water_contact3")
+conditional_effects(m4.1, effects = "e_coli_s:water_contact3")
+conditional_effects(m4.1, effects = "water_contact3") -> fit
+fit$water_contact3
 
 loo(m4, m4.1)
+
+# Model without site has better fit
+
+# Compare to model with highest single sample E. coli 
+
+m4.2 <- brm(agi3 ~ mo(water_contact3)*e_coli_max_s + age4 + gender + education2 + ethnicity + cond_GI + 
+              other_rec_act + beach_exp_food + sand_contact + household_group + 
+              (1 | beach/recruit_date),
+            family = bernoulli, data = data_follow, prior = priors2,
+            iter = 2000, chains = 4, cores = 4, warmup = 1000, seed = 123, control = list(adapt_delta = 0.95),
+            backend = "cmdstanr", stan_model_args = list(stanc_options = list("O1")))
+
+summary(m4.2, robust = TRUE)
+get_variables(m4.2)
+plot(m4.2)
+pp_check(m4.2, ndraws=100)
+pp_check(m4.2, type = "stat", stat = "mean")
+
+conditional_effects(m4.2, effects = "e_coli_max_s:water_contact3")
+conditional_effects(m4.2, effects = "water_contact3")
+
+loo(m4, m4.2)
+
+# Compare to model with qPCR enterococci instead of E. coli
+
+m5 <- brm(agi3 ~ mo(water_contact3)*entero_s + age4 + gender + education2 + ethnicity + cond_GI + 
+            other_rec_act + beach_exp_food + sand_contact + household_group +
+            (1 | beach/recruit_date),
+          family = bernoulli, data = data_follow, prior = priors2,
+          iter = 2000, chains = 4, cores = 4, warmup = 1000, seed = 123, control = list(adapt_delta = 0.95),
+          backend = "cmdstanr", stan_model_args = list(stanc_options = list("O1")))
+
+summary(m5, robust = TRUE)
+get_variables(m5)
+plot(m5)
+pp_check(m5, ndraws=100)
+pp_check(m5, type = "stat", stat = "mean")
+
+conditional_effects(m5, effects = "entero_s:water_contact3")
+conditional_effects(m5, effects = "water_contact3")
+
+# Compare to qPCR enterococci highest single sample value
+
+m5.1 <- brm(agi3 ~ mo(water_contact3)*entero_max_s + age4 + gender + education2 + ethnicity + cond_GI + 
+            other_rec_act + beach_exp_food + sand_contact + household_group +
+            (1 | beach/recruit_date),
+          family = bernoulli, data = data_follow, prior = priors2,
+          iter = 2000, chains = 4, cores = 4, warmup = 1000, seed = 123, control = list(adapt_delta = 0.95),
+          backend = "cmdstanr", stan_model_args = list(stanc_options = list("O1")))
+
+summary(m5.1, robust = TRUE)
+get_variables(m5.1)
+plot(m5.1)
+pp_check(m5.1, ndraws=100)
+pp_check(m5.1, type = "stat", stat = "mean")
+
+conditional_effects(m5.1, effects = "entero_max_s:water_contact3")
+conditional_effects(m5.1, effects = "water_contact3")
+
+loo(m5, m5.1)
 
 
 # Compare to model with MST human sewage biomarker instead of E. coli
 
-m4.2 <- brm(agi3 ~ mo(water_contact3)*mst_human_s + age4 + gender + education2 + ethnicity + cond_GI + 
+m6 <- brm(agi3 ~ mo(water_contact3)*mst_human_s + age4 + gender + education2 + ethnicity + cond_GI + 
               other_rec_act + beach_exp_food + sand_contact + household_group +
               (1 | beach/recruit_date),
             family = bernoulli, data = data_follow, prior = priors2,
             iter = 2000, chains = 4, cores = 4, warmup = 1000, seed = 123, control = list(adapt_delta = 0.95),
             backend = "cmdstanr", stan_model_args = list(stanc_options = list("O1")))
 
-summary(m4.2)
-get_variables(m4.2)
-plot(m4.2)
-pp_check(m4.2, ndraws=100)
-pp_check(m4.2, type = "stat", stat = "mean")
+summary(m6, robust = TRUE)
+get_variables(m6)
+plot(m6)
+pp_check(m6, ndraws=100)
+pp_check(m6, type = "stat", stat = "mean")
 
-conditional_effects(m4.2, effects = "mst_human_s:water_contact3")
-conditional_effects(m4.2, effects = "water_contact3")
+conditional_effects(m6, effects = "mst_human_s:water_contact3")
+conditional_effects(m6, effects = "water_contact3")
 
-# Reproduce other models with same number of observations for LOO comparison
+## Reproduce other FIB models with same number of observations for LOO comparisons
 
-data_follow_mst <- data_follow |> 
-  drop_na(any_of("e_coli_s", "mst_human_s"))
+data_follow_entero <- data_follow |> 
+  drop_na(any_of(c("e_coli_s", "entero_s")))
 
-m4_comp <- update(m4, newdata = data_follow_mst)
+m4.2_comp <- brm(agi3 ~ mo(water_contact3)*e_coli_max_s + age4 + gender + education2 + ethnicity + cond_GI + 
+                 other_rec_act + beach_exp_food + sand_contact + household_group + 
+                 (1 | beach/recruit_date),
+               family = bernoulli, data = data_follow_entero, prior = priors2,
+               iter = 2000, chains = 4, cores = 4, warmup = 1000, seed = 123, control = list(adapt_delta = 0.95),
+               backend = "cmdstanr", stan_model_args = list(stanc_options = list("O1")))
 
-loo(m4_comp, m4.2)
+loo(m4.2_comp, m5.1)
 
 
 ### Negative control analysis - E. coli
