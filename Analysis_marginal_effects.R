@@ -180,7 +180,7 @@ ggplot(pred, aes(x = e_coli, y = draw)) +
        fill = "") +
   theme_classic() + 
   theme(legend.position = "bottom") +
-  scale_x_continuous(breaks = c(100, 500, 1000, 1500, 2000)) 
+  scale_x_continuous(breaks = c(100, 500, 1000, 1500, 2000))  -> Fig5a
 
 ggplot(pred, aes(x = e_coli, y = draw)) +
   stat_lineribbon() +
@@ -191,7 +191,7 @@ ggplot(pred, aes(x = e_coli, y = draw)) +
   theme_classic() + 
   theme(legend.position = "bottom") +
   scale_x_continuous(breaks = c(100, 500, 1000, 1500, 2000)) +
-  facet_wrap(~ water_contact3) 
+  facet_wrap(~ water_contact3)   -> Fig6a
 
 
 avg_slopes(m4.2, re_formula = NA, variables = "e_coli_max_s", newdata = nd)
@@ -396,7 +396,12 @@ ggplot(pred, aes(x = entero, y = draw)) +
        y = "Predicted Probability of AGI",
        fill = "") +
   theme_classic() + 
-  theme(legend.position = "bottom") 
+  theme(legend.position = "bottom")  -> Fig5b
+
+Fig5b <- Fig5b + scale_y_discrete(labels = NULL)
+Fig5 <- Fig5a + Fig5b
+Fig5 + plot_annotation(tag_levels = 'A')
+
 
 ggplot(pred, aes(x = entero, y = draw)) +
   stat_lineribbon() +
@@ -406,7 +411,12 @@ ggplot(pred, aes(x = entero, y = draw)) +
        fill = "") +
   theme_classic() + 
   theme(legend.position = "bottom") +
-  facet_wrap(~ water_contact3) 
+  facet_wrap(~ water_contact3)   -> Fig6b
+
+Fig6b <- Fig6b + scale_y_discrete(labels = NULL)
+Fig6 <- Fig6a + Fig6b
+Fig6 + plot_annotation(tag_levels = 'A')
+
 
 avg_slopes(m5.1, re_formula = NA, variables = "entero_max_s", newdata = nd)
 
