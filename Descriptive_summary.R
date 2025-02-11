@@ -48,8 +48,13 @@ data |> group_by(date) |> ggplot(aes(x = log_e_coli)) + geom_histogram()
 data |> group_by(date) |> ggplot(aes(x = log_e_coli_s)) + geom_histogram()
 
 data |> group_by(date) |> ggplot(aes(x = e_coli_max)) + geom_histogram()
+data |> group_by(date) |> ggplot(aes(x = log_e_coli_max)) + geom_histogram()
+
 data |> group_by(date) |> ggplot(aes(x = entero_cce)) + geom_histogram()
+data |> group_by(date) |> ggplot(aes(x = log_entero_cce)) + geom_histogram()
+data |> group_by(date) |> ggplot(aes(x = log_entero_cce_s)) + geom_histogram()
 data |> group_by(date) |> ggplot(aes(x = entero_cce_max)) + geom_histogram()
+data |> group_by(date) |> ggplot(aes(x = log_entero_cce_max)) + geom_histogram()
 
 data |> group_by(date) |> ggplot(aes(x = turbidity)) + geom_histogram()
 
