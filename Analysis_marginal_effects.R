@@ -58,9 +58,9 @@ mfx <- comparisons(m4.2, re_formula = NA, variables = "water_contact3", by = "wa
 mfx <- mfx |> mutate(draw = draw*1000)
 
 mfx <- mfx |> 
-  mutate(contrast = recode(contrast, "Body immersion - No contact" = "Body immersion",
-                           "Swallowed water - No contact" = "Swallowed water",
-                           "Minimal contact - No contact" = "Minimal contact")) |> 
+  mutate(contrast = recode(contrast, "mean(Body immersion) - mean(No contact)" = "Body immersion",
+                           "mean(Swallowed water) - mean(No contact)" = "Swallowed water",
+                           "mean(Minimal contact) - mean(No contact)" = "Minimal contact")) |> 
   mutate(contrast = fct_relevel(contrast, "Body immersion", after = 1)) 
 
 ggplot(mfx, aes(x = draw, y = contrast, fill = contrast)) +
@@ -71,21 +71,22 @@ ggplot(mfx, aes(x = draw, y = contrast, fill = contrast)) +
   scale_fill_viridis(discrete=TRUE, option = "turbo") +
   xlim(-0.5, 100) -> Fig2A
 
-# Odds ratio scale
+# Risk ratio scale
 
 avg_comparisons(m4.2, re_formula = NA, variables = "water_contact3", newdata = nd,
                 comparison = "lnoravg", transform = "exp")
 
-mfx <- comparisons(m4.2, re_formula = NA, type = "link", variables = "water_contact3",   
+mfx <- comparisons(m4.2, re_formula = NA, comparison = "lnor", transform = "exp", 
+                   variables = "water_contact3",   
                    by = "water_contact3", newdata = nd) |> posterior_draws()
 
 mfx <- mfx |> 
-  mutate(contrast = recode(contrast, "Body immersion - No contact" = "Body immersion",
-                           "Swallowed water - No contact" = "Swallowed water",
-                           "Minimal contact - No contact" = "Minimal contact")) |> 
+  mutate(contrast = recode(contrast, "ln(odds(Body immersion) / odds(No contact))" = "Body immersion",
+                           "ln(odds(Swallowed water) / odds(No contact))" = "Swallowed water",
+                           "ln(odds(Minimal contact) / odds(No contact))" = "Minimal contact")) |> 
   mutate(contrast = fct_relevel(contrast, "Body immersion", after = 1)) 
 
-ggplot(mfx, aes(x = exp(draw), y = contrast, fill = contrast)) +
+ggplot(mfx, aes(x = draw, y = contrast, fill = contrast)) +
   stat_halfeye(slab_alpha = .5)  +
   geom_vline(xintercept = 1, linetype = "dashed") +
   labs(x = "Odds Ratios (vs. No Water Contact)", y="") +
@@ -217,9 +218,8 @@ nd <- data_follow |>
 nd <- nd |> mutate(water_contact3 = fct_relevel(water_contact3, "Minimal contact", 
                                                 "Body immersion", "Swallowed water")) 
 
-mfx <- slopes(m4.2, re_formula = NA, type = "response", variable = "log_e_coli_max_s",
-              newdata = nd) |> 
-  posterior_draws()
+mfx <- slopes(m4.2, re_formula = NA, variables = "log_e_coli_max_s", 
+              newdata = nd) |> posterior_draws()
 
 mfx <- mfx |> mutate(e_coli = exp(log_e_coli_max_s*sd(data_follow$log_e_coli_max, na.rm=TRUE) + mean(data_follow$log_e_coli_max, na.rm=TRUE))) 
 
@@ -423,6 +423,212 @@ avg_slopes(m5.1, re_formula = NA, variables = "log_entero_max_s", newdata = nd)
 avg_slopes(m5.1, re_formula = NA, variables = "log_entero_max_s", newdata = nd, by = "water_contact3")
 
 
+### Marginal effects, conditional on water contact, at specific cut-points
 
+quantile(data_follow$entero_cce_max, probs = c(0.5, 0.6, 0.75, 0.9, 0.95, 0.99), na.rm = TRUE)
+quantile(data_follow$log_entero_max_s, probs = c(0.5, 0.6, 0.75, 0.9, 0.95, 0.99), na.rm = TRUE)
+
+# Cut-points of 75th & 95th percentile
+
+nd <- data_follow |> 
+  data_grid(water_contact3 = c("Minimal contact", "Body immersion", "Swallowed water"),
+            log_entero_max_s = c(0.42, 2.086), 
+            age4 = c("0-4", "5-9", "10-14", "15-19", "20+"),
+            gender = c("woman/girl", "man/boy", "fluid/trans"),
+            ethnicity = "White", education2 = "bachelors", cond_GI = "No", other_rec_act = "Yes", 
+            beach_exp_food = "Yes", sand_contact = "No", household_group = "No") 
+
+nd <- nd |> mutate(water_contact3 = fct_relevel(water_contact3, "Minimal contact", 
+                                                "Body immersion", "Swallowed water")) 
+
+mfx <- slopes(m5.1, re_formula = NA, variables = "log_entero_max_s", 
+              newdata = nd) |> posterior_draws()
+
+mfx <- mfx |> 
+  mutate(entero = exp(log_entero_max_s*sd(data_follow$log_entero_max, na.rm=TRUE) + mean(data_follow$log_entero_max, na.rm=TRUE))) 
+
+ggplot(mfx, aes(x = draw, y = water_contact3, fill = factor(log_entero_max_s))) +
+  stat_halfeye() +
+  geom_vline(xintercept = 0, linetype = "dashed") +
+  labs(x = "Marginal Effect of Enterococci Highest Single Sample Values",
+       y = "Posterior Density",
+       fill = "") +
+  theme_classic() +
+  theme(legend.position = "none") +
+  scale_fill_viridis(discrete=TRUE, option = "turbo") +
+  facet_wrap(~ factor(entero)) +
+  xlim(-0.025, 0.05) 
+
+
+######################################################
+### Marginal effects for MST human marker mt model ###
+
+nd <- data_follow |> 
+  data_grid(water_contact3 = c("No contact", "Minimal contact", "Body immersion", "Swallowed water"),
+            log_mst_human_mt_max_s = mean(entero_max_s, na.rm=TRUE), 
+            age4 = c("0-4", "5-9", "10-14", "15-19", "20+"),
+            gender = c("woman/girl", "man/boy", "fluid/trans"),
+            ethnicity = "White", education2 = "bachelors", cond_GI = "No", other_rec_act = "Yes", 
+            beach_exp_food = "Yes", sand_contact = "No", household_group = "No") 
+
+nd <- nd |> mutate(water_contact3 = fct_relevel(water_contact3, "No contact", "Minimal contact", 
+                                                "Body immersion", "Swallowed water")) 
+
+predictions(m7.1, re_formula = NA, by = "water_contact3", type = "response", newdata = nd)
+
+pred <- predictions(m7.1, re_formula = NA, by = "water_contact3", type = "response", newdata = nd) |> posterior_draws()
+
+pred <- pred |> mutate(draw = draw*1000)
+
+ggplot(pred, aes(x = draw, y = water_contact3, fill = water_contact3)) +
+  stat_halfeye(slab_alpha = .5)  +
+  labs(x = "Predicted AGI Incident Risk per 1000 Beachgoers", y = "Level of Water Contact",
+       subtitle = "Posterior Predictions", fill = "Water contact") +
+  theme_minimal() +
+  theme(legend.position = "none") +
+  scale_fill_viridis(discrete=TRUE, option = "turbo") +
+  xlim(0, 150)
+
+# Examine marginal effects/contrast of water contact exposure effect - probability scale
+
+avg_comparisons(m7.1, re_formula = NA, variables = "water_contact3", newdata = nd)
+
+mfx <- comparisons(m7.1, re_formula = NA, variables = "water_contact3", by = "water_contact3", 
+                   newdata = nd) |> posterior_draws()
+
+mfx <- mfx |> mutate(draw = draw*1000)
+
+mfx <- mfx |> 
+  mutate(contrast = recode(contrast, "Body immersion - No contact" = "Body immersion",
+                           "Swallowed water - No contact" = "Swallowed water",
+                           "Minimal contact - No contact" = "Minimal contact")) |> 
+  mutate(contrast = fct_relevel(contrast, "Body immersion", after = 1))
+
+ggplot(mfx, aes(x = draw, y = contrast, fill = contrast)) +
+  stat_halfeye(slab_alpha = .5)  +
+  labs(x = "Water Contact Effect on AGI Incident Risk per 1000 Beachgoers", y = "") +
+  theme_minimal() +
+  theme(legend.position = "none") +
+  scale_fill_viridis(discrete=TRUE, option = "turbo") +
+  xlim(-0.5, 70) -> Fig2A
+
+# Odds ratio scale
+
+avg_comparisons(m7.1, re_formula = NA, variables = "water_contact3", newdata = nd,
+                comparison = "lnoravg", transform = "exp")
+
+mfx <- comparisons(m7.1, re_formula = NA, type = "link", variables = "water_contact3",   
+                   by = "water_contact3", newdata = nd) |> posterior_draws()
+
+mfx <- mfx |> 
+  mutate(contrast = recode(contrast, "Body immersion - No contact" = "Body immersion",
+                           "Swallowed water - No contact" = "Swallowed water",
+                           "Minimal contact - No contact" = "Minimal contact")) |> 
+  mutate(contrast = fct_relevel(contrast, "Body immersion", after = 1))
+
+ggplot(mfx, aes(x = exp(draw), y = contrast, fill = contrast)) +
+  stat_halfeye(slab_alpha = .5)  +
+  geom_vline(xintercept = 1, linetype = "dashed") +
+  labs(x = "Odds Ratios (vs. No Water Contact)", y="") +
+  theme_minimal() +
+  theme(legend.position = "none") +
+  scale_fill_viridis(discrete=TRUE, option = "turbo") +
+  xlim(0, 6) -> Fig2B
+
+Fig2B <- Fig2B + scale_y_discrete(labels = NULL)
+Fig2 <- Fig2A + Fig2B
+Fig2 + plot_annotation(tag_levels = 'A')
+
+# Predicted probabilities of MST relationship, conditional on water contact level
+
+quantile(data_follow$mst_human_mt_max, na.rm = TRUE)
+quantile(data_follow$log_mst_human_mt_max_s, na.rm = TRUE)
+
+nd <- data_follow |> 
+  data_grid(water_contact3 = c("Minimal contact", "Body immersion", "Swallowed water"),
+            log_mst_human_mt_max_s = seq(-1.52, 1.68, by = 0.12), 
+            age4 = c("0-4", "5-9", "10-14", "15-19", "20+"),
+            gender = c("woman/girl", "man/boy", "fluid/trans"),
+            ethnicity = "White", education2 = "bachelors", cond_GI = "No", other_rec_act = "Yes", 
+            beach_exp_food = "Yes", sand_contact = "No", household_group = "No") 
+
+nd <- nd |> mutate(water_contact3 = fct_relevel(water_contact3, "Minimal contact", 
+                                                "Body immersion", "Swallowed water")) 
+
+pred <- predictions(m7.1, re_formula = NA, type = "response", newdata = nd) |> 
+  posterior_draws()
+
+pred <- pred |> 
+  mutate(mst_human_mt = exp(log_mst_human_mt_max_s*sd(data_follow$log_mst_human_mt_max, na.rm=TRUE) + mean(data_follow$log_mst_human_mt_max, na.rm=TRUE))) 
+
+ggplot(pred, aes(x = mst_human_mt, y = draw)) +
+  stat_lineribbon() +
+  scale_fill_brewer(palette = "Blues") +
+  labs(x = "Human Mitochondrial DNA Highest Single Sample",
+       y = "Predicted Probability of AGI",
+       fill = "") +
+  theme_classic() + 
+  theme(legend.position = "bottom")  -> Fig5b
+
+Fig5b <- Fig5b + scale_y_discrete(labels = NULL)
+Fig5 <- Fig5a + Fig5b
+Fig5 + plot_annotation(tag_levels = 'A')
+
+
+ggplot(pred, aes(x = mst_human_mt, y = draw)) +
+  stat_lineribbon() +
+  scale_fill_brewer(palette = "Blues") +
+  labs(x = "Human Mitochondrial DNA Highest Single Sample",
+       y = "Predicted Probability of AGI",
+       fill = "") +
+  theme_classic() + 
+  theme(legend.position = "bottom") +
+  facet_wrap(~ water_contact3)   -> Fig6b
+
+Fig6b <- Fig6b + scale_y_discrete(labels = NULL)
+Fig6 <- Fig6a + Fig6b
+Fig6 + plot_annotation(tag_levels = 'A')
+
+
+avg_slopes(m7.1, re_formula = NA, variables = "log_mst_human_mt_max_s", newdata = nd)
+
+avg_slopes(m7.1, re_formula = NA, variables = "log_mst_human_mt_max_s", newdata = nd, by = "water_contact3")
+
+
+### Marginal effects, conditional on water contact, at specific cut-points
+
+quantile(data_follow$mst_human_mt_max, probs = c(0.5, 0.6, 0.75, 0.9, 0.95, 0.99), na.rm = TRUE)
+quantile(data_follow$log_mst_human_mt_max_s, probs = c(0.5, 0.6, 0.75, 0.9, 0.95, 0.99), na.rm = TRUE)
+
+# Cut-points of 75th & 95th percentile
+
+nd <- data_follow |> 
+  data_grid(water_contact3 = c("Minimal contact", "Body immersion", "Swallowed water"),
+            log_mst_human_mt_max_s = c(0.714, 1.124), 
+            age4 = c("0-4", "5-9", "10-14", "15-19", "20+"),
+            gender = c("woman/girl", "man/boy", "fluid/trans"),
+            ethnicity = "White", education2 = "bachelors", cond_GI = "No", other_rec_act = "Yes", 
+            beach_exp_food = "Yes", sand_contact = "No", household_group = "No") 
+
+nd <- nd |> mutate(water_contact3 = fct_relevel(water_contact3, "Minimal contact", 
+                                                "Body immersion", "Swallowed water")) 
+
+mfx <- slopes(m7.1, re_formula = NA, variables = "log_mst_human_mt_max_s", 
+              newdata = nd) |> posterior_draws()
+
+mfx <- mfx |> 
+  mutate(mst_human_mt = exp(log_mst_human_mt_max_s*sd(data_follow$log_mst_human_mt_max, na.rm=TRUE) + mean(data_follow$log_mst_human_mt_max, na.rm=TRUE))) 
+
+ggplot(mfx, aes(x = draw, y = water_contact3, fill = factor(log_mst_human_mt_max_s))) +
+  stat_halfeye() +
+  geom_vline(xintercept = 0, linetype = "dashed") +
+  labs(x = "Marginal Effect of Human DNA Marker Highest Single Sample Values",
+       y = "Posterior Density",
+       fill = "") +
+  theme_classic() +
+  theme(legend.position = "none") +
+  scale_fill_viridis(discrete=TRUE, option = "turbo") +
+  facet_wrap(~ factor(mst_human_mt)) +
+  xlim(-0.025, 0.05) 
 
 

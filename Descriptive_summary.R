@@ -61,12 +61,12 @@ data |> group_by(date) |> ggplot(aes(x = turbidity)) + geom_histogram()
 # Examine FIB results by beach
 
 data |>
-  ggplot(aes(x = beach, y = e_coli, fill = beach)) +
+  ggplot(aes(x = beach, y = log_e_coli, fill = beach)) +
   geom_violin() +
   geom_boxplot(width = 0.4, color="grey", alpha = 0.2) +
   scale_fill_viridis(discrete = TRUE) +
   theme_minimal() +
-  labs(y = "E. coli geometric mean (CFU / 100 mL)", x = "Beach") + 
+  labs(y = "Log E. coli mean (CFU / 100 mL)", x = "Beach") + 
   theme(legend.position = "none")
 
 data |>
@@ -80,12 +80,12 @@ data |>
 
 data |>
   filter(site != "Toronto") |> 
-  ggplot(aes(x = beach, y = entero_cce, fill = beach)) +
+  ggplot(aes(x = beach, y = log_entero_cce, fill = beach)) +
   geom_violin() +
   geom_boxplot(width = 0.4, color="grey", alpha = 0.2) +
   scale_fill_viridis(discrete = TRUE) +
   theme_minimal() +
-  labs(y = "Enterococci geometric mean (CCE / 100 mL)", x = "Beach") + 
+  labs(y = "Log enterococci mean (CCE / 100 mL)", x = "Beach") + 
   theme(legend.position = "none")
 
 data |>
@@ -97,6 +97,35 @@ data |>
   theme_minimal() +
   labs(y = "Enterococci highest single sample (CCE / 100 mL)", x = "Beach") + 
   theme(legend.position = "none")
+
+data |>
+  ggplot(aes(x = beach, y = log_mst_human, fill = beach)) +
+  geom_violin() +
+  geom_boxplot(width = 0.4, color="grey", alpha = 0.2) +
+  scale_fill_viridis(discrete = TRUE) +
+  theme_minimal() +
+  labs(y = "Log MST Human HF183 Biomarker (DNA copies / 100 mL)", x = "Beach") + 
+  theme(legend.position = "none")
+
+data |>
+  filter(site != "Toronto") |> 
+  ggplot(aes(x = beach, y = log_mst_human_mt, fill = beach)) +
+  geom_violin() +
+  geom_boxplot(width = 0.4, color="grey", alpha = 0.2) +
+  scale_fill_viridis(discrete = TRUE) +
+  theme_minimal() +
+  labs(y = "Log MST Human Mitochondrial Biomarker (DNA copies / 100 mL)", x = "Beach") + 
+  theme(legend.position = "none")
+
+data |>
+  ggplot(aes(x = beach, y = log_mst_gull, fill = beach)) +
+  geom_violin() +
+  geom_boxplot(width = 0.4, color="grey", alpha = 0.2) +
+  scale_fill_viridis(discrete = TRUE) +
+  theme_minimal() +
+  labs(y = "Log MST Gull4 Biomarker (DNA copies / 100 mL)", x = "Beach") + 
+  theme(legend.position = "none")
+
 
 # Examine water contact and AGI outcome relationship
 
@@ -146,13 +175,13 @@ data_follow |>
   facet_grid(~water_contact2)
 
 data_follow |> 
-  ggplot(aes(x = agi3, y = mst_human, fill = agi3)) +
+  ggplot(aes(x = agi3, y = log_mst_human, fill = agi3)) +
   geom_violin() +
   geom_boxplot(width = 0.1) +
   theme(legend.position = "none") +
   scale_fill_viridis_d(option = "cividis") +
   labs(x = "Acute gastrointestinal illness (AGI)",
-       y = "HF183 human sewage marker (DNA / 100mL)") +
+       y = "Log HF183 human sewage marker (DNA / 100mL)") +
   facet_wrap(~water_contact2)
 
 data_follow |> 
@@ -166,14 +195,24 @@ data_follow |>
        y = "HF183 human sewage marker (DNA / 100mL)")
 
 data_follow |> 
-  ggplot(aes(x = agi3, y = mst_gull, fill = agi3)) +
+  ggplot(aes(x = agi3, y = log_mst_human_mt, fill = agi3)) +
+  geom_violin() +
+  geom_boxplot(width = 0.1) +
+  theme(legend.position = "none") +
+  scale_fill_viridis_d(option = "cividis") +
+  labs(x = "Acute gastrointestinal illness (AGI)",
+       y = "Log human mitochondrial marker (DNA / 100mL)") +
+  facet_wrap(~water_contact2)
+
+data_follow |> 
+  ggplot(aes(x = agi3, y = log_mst_gull, fill = agi3)) +
   geom_violin() +
   geom_boxplot(width = 0.1) +
   theme(legend.position = "none") +
   scale_fill_viridis_d(option = "cividis") +
   facet_wrap(~water_contact2) +
   labs(x = "Acute gastrointestinal illness (AGI)",
-       y = "Seagull biomarker (DNA / 100mL)")
+       y = "Log seagull biomarker (DNA / 100mL)")
 
 data_follow |> 
   ggplot(aes(x = agi3, y = turbidity, fill = agi3)) +

@@ -249,7 +249,7 @@ conditional_effects(m5.1, effects = "water_contact3")
 loo(m5, m5.1)
 
 
-# Compare to model with MST human sewage biomarker instead of E. coli
+# Compare to model with MST human sewage biomarker HF183 instead of E. coli
 
 m6 <- brm(agi3 ~ mo(water_contact3)*log_mst_human_s + age4 + gender + education2 + ethnicity + cond_GI + 
               other_rec_act + beach_exp_food + sand_contact + household_group +
@@ -267,6 +267,61 @@ pp_check(m6, type = "stat", stat = "mean")
 conditional_effects(m6, effects = "log_mst_human_s:water_contact3")
 conditional_effects(m6, effects = "water_contact3")
 
+
+m6.1 <- brm(agi3 ~ mo(water_contact3)*log_mst_human_max_s + age4 + gender + education2 + ethnicity + cond_GI + 
+            other_rec_act + beach_exp_food + sand_contact + household_group +
+            (1 | beach/recruit_date),
+          family = bernoulli, data = data_follow, prior = priors2,
+          iter = 2000, chains = 4, cores = 4, warmup = 1000, seed = 123, control = list(adapt_delta = 0.95),
+          backend = "cmdstanr", stan_model_args = list(stanc_options = list("O1")))
+
+summary(m6.1, robust = TRUE)
+get_variables(m6.1)
+plot(m6.1)
+pp_check(m6.1, ndraws=100)
+pp_check(m6.1, type = "stat", stat = "mean")
+
+conditional_effects(m6.1, effects = "log_mst_human_max_s:water_contact3")
+conditional_effects(m6.1, effects = "water_contact3")
+
+loo(m6, m6.1)
+
+# Compare to model with MST Human mitochondrial marker
+
+m7 <- brm(agi3 ~ mo(water_contact3)*log_mst_human_mt_s + age4 + gender + education2 + ethnicity + cond_GI + 
+            other_rec_act + beach_exp_food + sand_contact + household_group +
+            (1 | beach/recruit_date),
+          family = bernoulli, data = data_follow, prior = priors2,
+          iter = 2000, chains = 4, cores = 4, warmup = 1000, seed = 123, control = list(adapt_delta = 0.95),
+          backend = "cmdstanr", stan_model_args = list(stanc_options = list("O1")))
+
+summary(m7, robust = TRUE)
+get_variables(m7)
+plot(m7)
+pp_check(m7, ndraws=100)
+pp_check(m7, type = "stat", stat = "mean")
+
+conditional_effects(m7, effects = "log_mst_human_mt_s:water_contact3")
+conditional_effects(m7, effects = "water_contact3")
+
+m7.1 <- brm(agi3 ~ mo(water_contact3)*log_mst_human_mt_max_s + age4 + gender + education2 + ethnicity + cond_GI + 
+              other_rec_act + beach_exp_food + sand_contact + household_group +
+              (1 | beach/recruit_date),
+            family = bernoulli, data = data_follow, prior = priors2,
+            iter = 2000, chains = 4, cores = 4, warmup = 1000, seed = 123, control = list(adapt_delta = 0.95),
+            backend = "cmdstanr", stan_model_args = list(stanc_options = list("O1")))
+
+summary(m7.1, robust = TRUE)
+get_variables(m7.1)
+plot(m7.1)
+pp_check(m7.1, ndraws=100)
+pp_check(m7.1, type = "stat", stat = "mean")
+
+conditional_effects(m7.1, effects = "log_mst_human_mt_max_s:water_contact3")
+conditional_effects(m7.1, effects = "water_contact3")
+
+loo(m7, m7.1)
+
 ## Reproduce other FIB models with same number of observations for LOO comparisons
 
 data_follow_entero <- data_follow |> 
@@ -280,6 +335,35 @@ m4.2_comp <- brm(agi3 ~ mo(water_contact3)*log_e_coli_max_s + age4 + gender + ed
                backend = "cmdstanr", stan_model_args = list(stanc_options = list("O1")))
 
 loo(m4.2_comp, m5.1)
+
+
+data_follow_mst_human <- data_follow |> 
+  drop_na(any_of(c("log_e_coli_s", "log_mst_human_s")))
+
+m4.2_mst <- brm(agi3 ~ mo(water_contact3)*log_e_coli_max_s + age4 + gender + education2 + ethnicity + cond_GI + 
+                   other_rec_act + beach_exp_food + sand_contact + household_group + 
+                   (1 | beach/recruit_date),
+                 family = bernoulli, data = data_follow_mst_human, prior = priors2,
+                 iter = 2000, chains = 4, cores = 4, warmup = 1000, seed = 123, control = list(adapt_delta = 0.95),
+                 backend = "cmdstanr", stan_model_args = list(stanc_options = list("O1")))
+
+loo(m4.2_mst, m6.1)
+
+loo(m4.2_comp, m7.1)
+loo(m4.2_comp, m5.1, m7.1)
+
+
+data_follow_any <- data_follow |> 
+  drop_na(any_of(c("log_e_coli_s", "log_entero_s", "log_mst_human_s", "log_mst_human_mt_s")))
+
+m6.1_comp <- brm(agi3 ~ mo(water_contact3)*log_mst_human_max_s + age4 + gender + education2 + ethnicity + cond_GI + 
+                  other_rec_act + beach_exp_food + sand_contact + household_group + 
+                  (1 | beach/recruit_date),
+                family = bernoulli, data = data_follow_any, prior = priors2,
+                iter = 2000, chains = 4, cores = 4, warmup = 1000, seed = 123, control = list(adapt_delta = 0.95),
+                backend = "cmdstanr", stan_model_args = list(stanc_options = list("O1")))
+
+loo(m4.2_comp, m5.1, m6.1_comp, m7.1)
 
 
 ### Negative control analysis - E. coli
