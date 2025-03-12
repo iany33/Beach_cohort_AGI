@@ -2,6 +2,7 @@
 .Rhistory
 .RData
 .Ruserdata
+.RDataTmp
 data.xlsx
 Analysis_bayesian_extra.R
 .Rproj.user
