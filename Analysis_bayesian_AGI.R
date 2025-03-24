@@ -40,10 +40,6 @@ mcmc_pairs(m1, pars = vars(contains("b_")), diag_fun = "den", off_diag_fun = "he
 
 # Check if treating exposure as monotonic variable fits better than as indicator variable
 
-data_follow <- data_follow |> 
-  mutate(water_contact3 = factor(water_contact2, ordered = T, 
-                                 levels = c("No contact", "Minimal contact", "Body immersion", "Swallowed water")))
-
 get_prior(agi3 ~ mo(water_contact3) + (1 | beach/recruit_date/house_id), 
           family = bernoulli, data = data_follow)
 
@@ -388,6 +384,139 @@ pp_check(m.nc, ndraws=100)
 pp_check(m.nc, type = "stat", stat = "mean")
 
 conditional_effects(m.nc, effects = "log_e_coli_s")
+
+
+
+### Sensitivity analyses ###
+
+# Alternative exposure: time spent in water (min), mean centered and standardized
+
+data_follow <- data_follow |> 
+  mutate(water_time_s = (water_time - mean(water_time, na.rm = TRUE)) / sd(water_time, na.rm = TRUE))
+
+data_follow |> group_by(date) |> ggplot(aes(x = water_time)) + geom_histogram()
+data_follow |> group_by(date) |> ggplot(aes(x = water_time_s)) + geom_histogram()
+
+priors3 <- c(set_prior("normal(0,1)",class= "b"),
+             set_prior("exponential(1)", class = "sd"))
+
+m_watertime <- brm(agi3 ~ water_time_s*log_e_coli_max_s + age4 + gender + education2 + ethnicity + cond_GI + 
+              other_rec_act + beach_exp_food + sand_contact + household_group + 
+              (1 | beach/recruit_date),
+            family = bernoulli, data = data_follow, prior = priors3,
+            iter = 2000, chains = 4, cores = 4, warmup = 1000, seed = 123, control = list(adapt_delta = 0.95),
+            backend = "cmdstanr", stan_model_args = list(stanc_options = list("O1")))
+
+summary(m_watertime, robust = TRUE)
+get_variables(m_watertime)
+plot(m_watertime)
+pp_check(m_watertime, ndraws=100)
+pp_check(m_watertime, type = "stat", stat = "mean")
+
+conditional_effects(m_watertime, effects = "log_e_coli_max_s:water_time_s")
+conditional_effects(m_watertime, effects = "water_time_s")
+
+# Alternative outcome: diarrhea
+
+m_diar <- brm(diarrhea3 ~ mo(water_contact3)*log_e_coli_max_s + age4 + gender + education2 + ethnicity + cond_GI + 
+              other_rec_act + beach_exp_food + sand_contact + household_group + 
+              (1 | beach/recruit_date),
+            family = bernoulli, data = data_follow, prior = priors2,
+            iter = 2000, chains = 4, cores = 4, warmup = 1000, seed = 123, control = list(adapt_delta = 0.95),
+            backend = "cmdstanr", stan_model_args = list(stanc_options = list("O1")))
+
+summary(m_diar, robust = TRUE)
+get_variables(m_diar)
+plot(m_diar)
+pp_check(m_diar, ndraws=100)
+pp_check(m_diar, type = "stat", stat = "mean")
+
+conditional_effects(m_diar, effects = "log_e_coli_max_s:water_contact3")
+conditional_effects(m_diar, effects = "water_contact3")
+
+# Alternative follow-up: 3 days
+
+m_3day <- brm(agi_3day ~ mo(water_contact3)*log_e_coli_max_s + age4 + gender + education2 + ethnicity + cond_GI + 
+                  other_rec_act + beach_exp_food + sand_contact + household_group + 
+                  (1 | beach/recruit_date),
+                family = bernoulli, data = data_follow, prior = priors2,
+                iter = 2000, chains = 4, cores = 4, warmup = 1000, seed = 123, control = list(adapt_delta = 0.95),
+                backend = "cmdstanr", stan_model_args = list(stanc_options = list("O1")))
+
+summary(m_3day, robust = TRUE)
+get_variables(m_3day)
+plot(m_3day)
+pp_check(m_3day, ndraws=100)
+pp_check(m_3day, type = "stat", stat = "mean")
+
+conditional_effects(m_3day, effects = "log_e_coli_max_s:water_contact3")
+conditional_effects(m_3day, effects = "water_contact3")
+
+
+# Alternative follow-up: 5 days
+
+m_5day <- brm(agi_5day ~ mo(water_contact3)*log_e_coli_max_s + age4 + gender + education2 + ethnicity + cond_GI + 
+                other_rec_act + beach_exp_food + sand_contact + household_group + 
+                (1 | beach/recruit_date),
+              family = bernoulli, data = data_follow, prior = priors2,
+              iter = 2000, chains = 4, cores = 4, warmup = 1000, seed = 123, control = list(adapt_delta = 0.95),
+              backend = "cmdstanr", stan_model_args = list(stanc_options = list("O1")))
+
+summary(m_5day, robust = TRUE)
+get_variables(m_5day)
+plot(m_5day)
+pp_check(m_5day, ndraws=100)
+pp_check(m_5day, type = "stat", stat = "mean")
+
+conditional_effects(m_5day, effects = "log_e_coli_max_s:water_contact3")
+conditional_effects(m_5day, effects = "water_contact3")
+
+
+# Stronger priors: normal(0,0.5)
+
+priors_strong <- c(set_prior("normal(0,0.5)",class= "b"),
+                   set_prior("exponential(1)", class = "sd"),
+                   set_prior("dirichlet(c(1, 3, 6))", class = "simo", coef = "mowater_contact31"))
+
+m_strong <- brm(agi3 ~ mo(water_contact3)*log_e_coli_max_s + age4 + gender + education2 + ethnicity + cond_GI + 
+                other_rec_act + beach_exp_food + sand_contact + household_group + 
+                (1 | beach/recruit_date),
+              family = bernoulli, data = data_follow, prior = priors_strong,
+              iter = 2000, chains = 4, cores = 4, warmup = 1000, seed = 123, control = list(adapt_delta = 0.95),
+              backend = "cmdstanr", stan_model_args = list(stanc_options = list("O1")))
+
+summary(m_strong, robust = TRUE)
+get_variables(m_strong)
+plot(m_strong)
+pp_check(m_strong, ndraws=100)
+pp_check(m_strong, type = "stat", stat = "mean")
+
+conditional_effects(m_strong, effects = "log_e_coli_max_s:water_contact3")
+conditional_effects(m_strong, effects = "water_contact3")
+
+# Weaker priors: normal(0,2)
+
+priors_weak <- c(set_prior("normal(0,2)",class= "b"),
+                   set_prior("exponential(1)", class = "sd"),
+                   set_prior("dirichlet(c(1, 1, 1))", class = "simo", coef = "mowater_contact31"))
+
+m_weak <- brm(agi3 ~ mo(water_contact3)*log_e_coli_max_s + age4 + gender + education2 + ethnicity + cond_GI + 
+                  other_rec_act + beach_exp_food + sand_contact + household_group + 
+                  (1 | beach/recruit_date),
+                family = bernoulli, data = data_follow, prior = priors_weak,
+                iter = 2000, chains = 4, cores = 4, warmup = 1000, seed = 123, control = list(adapt_delta = 0.95),
+                backend = "cmdstanr", stan_model_args = list(stanc_options = list("O1")))
+
+summary(m_weak, robust = TRUE)
+get_variables(m_weak)
+plot(m_weak)
+pp_check(m_weak, ndraws=100)
+pp_check(m_weak, type = "stat", stat = "mean")
+
+conditional_effects(m_weak, effects = "log_e_coli_max_s:water_contact3")
+conditional_effects(m_weak, effects = "water_contact3")
+
+
 
 
 

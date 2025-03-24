@@ -15,6 +15,12 @@ pacman::p_load(
 data <- import(here("data.xlsx"))
 data_follow <- data |> filter(follow == "Yes") 
 
+# Create new ordinal exposure variable
+
+data_follow <- data_follow |> 
+  mutate(water_contact3 = factor(water_contact2, ordered = T, 
+                                 levels = c("No contact", "Minimal contact", "Body immersion", "Swallowed water")))
+
 # Descriptive tables
 
 data |> 

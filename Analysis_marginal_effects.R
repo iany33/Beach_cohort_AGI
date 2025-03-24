@@ -194,6 +194,30 @@ ggplot(pred, aes(x = e_coli, y = draw)) +
   scale_x_continuous(breaks = c(100, 500, 1000, 1500, 2000)) +
   facet_wrap(~ water_contact3)   -> Fig6a
 
+# Predictions on log scale
+
+pred <- pred |> 
+  mutate(log_e_coli = log_e_coli_max_s*sd(data_follow$log_e_coli_max, na.rm=TRUE) + mean(data_follow$log_e_coli_max, na.rm=TRUE)) 
+
+ggplot(pred, aes(x = log_e_coli, y = draw)) +
+  stat_lineribbon() +
+  scale_fill_brewer(palette = "Blues") +
+  labs(x = "Log E. coli Highest Single Sample",
+       y = "Predicted Probability of AGI",
+       fill = "") +
+  theme_classic() + 
+  theme(legend.position = "bottom")
+
+ggplot(pred, aes(x = log_e_coli, y = draw)) +
+  stat_lineribbon() +
+  scale_fill_brewer(palette = "Blues") +
+  labs(x = "Log E. coli Highest Single Sample",
+       y = "Predicted Probability of AGI",
+       fill = "") +
+  theme_classic() + 
+  theme(legend.position = "bottom") +
+  facet_wrap(~ water_contact3)
+
 
 avg_slopes(m4.2, re_formula = NA, variables = "log_e_coli_max_s", newdata = nd)
 
@@ -202,38 +226,40 @@ avg_slopes(m4.2, re_formula = NA, variables = "log_e_coli_max_s", newdata = nd, 
 
 ### Marginal effects of E. coli, conditional on water contact, at specific cut-points
 
-quantile(data_follow$e_coli_max, probs = c(0.5, 0.6, 0.75, 0.9, 0.95, 0.99), na.rm = TRUE)
-quantile(data_follow$log_e_coli_max_s, probs = c(0.5, 0.6, 0.75, 0.9, 0.95, 0.99), na.rm = TRUE)
+quantile(data_follow$e_coli_max, probs = c(0.25, 0.5, 0.75, 0.9, 0.95, 0.99), na.rm = TRUE)
+quantile(data_follow$log_e_coli_max_s, probs = c(0.25, 0.5,  0.75, 0.9, 0.95, 0.99), na.rm = TRUE)
 
-# Cut-points of 75th & 95th percentile
+# Cut-points of 50th, 75th & 95th percentiles
 
 nd <- data_follow |> 
-  data_grid(water_contact3 = c("Minimal contact", "Body immersion", "Swallowed water"),
-            log_e_coli_max_s = c(0.77, 1.68), 
+  data_grid(water_contact3 = c("No contact", "Minimal contact", "Body immersion", "Swallowed water"),
+            log_e_coli_max_s = quantile(log_e_coli_max_s, probs = c(0.50, 0.75, 0.95), na.rm = TRUE), 
             age4 = c("0-4", "5-9", "10-14", "15-19", "20+"),
             gender = c("woman/girl", "man/boy", "fluid/trans"),
             ethnicity = "White", education2 = "bachelors", cond_GI = "No", other_rec_act = "Yes", 
             beach_exp_food = "Yes", sand_contact = "No", household_group = "No") 
 
-nd <- nd |> mutate(water_contact3 = fct_relevel(water_contact3, "Minimal contact", 
+nd <- nd |> mutate(water_contact3 = fct_relevel(water_contact3, "No contact", "Minimal contact", 
                                                 "Body immersion", "Swallowed water")) 
 
-mfx <- slopes(m4.2, re_formula = NA, variables = "log_e_coli_max_s", 
-              newdata = nd) |> posterior_draws()
+pred <- predictions(m4.2, re_formula = NA, by = c("log_e_coli_max_s", "water_contact3"), 
+                    type = "response", newdata = nd) |> posterior_draws()
 
-mfx <- mfx |> mutate(e_coli = exp(log_e_coli_max_s*sd(data_follow$log_e_coli_max, na.rm=TRUE) + mean(data_follow$log_e_coli_max, na.rm=TRUE))) 
+pred <- pred |> mutate(e_coli = exp(log_e_coli_max_s*sd(data_follow$log_e_coli_max, na.rm=TRUE) + mean(data_follow$log_e_coli_max, na.rm=TRUE))) |> 
+  mutate(e_coli = round(e_coli, digits = 0)) |> 
+  mutate(draw = draw*1000)
 
-ggplot(mfx, aes(x = draw, y = water_contact3, fill = factor(log_e_coli_max_s))) +
+ggplot(pred, aes(x = draw, y = water_contact3, fill = factor(log_e_coli_max_s))) +
   stat_halfeye() +
   geom_vline(xintercept = 0, linetype = "dashed") +
-  labs(x = "Marginal Effect of E. coli Highest Single Sample Values",
-       y = "Posterior Density",
+  labs(x = "Predicted AGI Incident Risk per 1000 Beachgoers",
+       y = "",
        fill = "") +
   theme_classic() +
   theme(legend.position = "none") +
   scale_fill_viridis(discrete=TRUE, option = "turbo") +
   facet_wrap(~ factor(e_coli)) +
-  xlim(-0.025, 0.05) 
+  xlim(0, 200) 
 
 
 ### Beach-specific posterior probabilities and contrasts
@@ -423,41 +449,6 @@ avg_slopes(m5.1, re_formula = NA, variables = "log_entero_max_s", newdata = nd)
 avg_slopes(m5.1, re_formula = NA, variables = "log_entero_max_s", newdata = nd, by = "water_contact3")
 
 
-### Marginal effects, conditional on water contact, at specific cut-points
-
-quantile(data_follow$entero_cce_max, probs = c(0.5, 0.6, 0.75, 0.9, 0.95, 0.99), na.rm = TRUE)
-quantile(data_follow$log_entero_max_s, probs = c(0.5, 0.6, 0.75, 0.9, 0.95, 0.99), na.rm = TRUE)
-
-# Cut-points of 75th & 95th percentile
-
-nd <- data_follow |> 
-  data_grid(water_contact3 = c("Minimal contact", "Body immersion", "Swallowed water"),
-            log_entero_max_s = c(0.42, 2.086), 
-            age4 = c("0-4", "5-9", "10-14", "15-19", "20+"),
-            gender = c("woman/girl", "man/boy", "fluid/trans"),
-            ethnicity = "White", education2 = "bachelors", cond_GI = "No", other_rec_act = "Yes", 
-            beach_exp_food = "Yes", sand_contact = "No", household_group = "No") 
-
-nd <- nd |> mutate(water_contact3 = fct_relevel(water_contact3, "Minimal contact", 
-                                                "Body immersion", "Swallowed water")) 
-
-mfx <- slopes(m5.1, re_formula = NA, variables = "log_entero_max_s", 
-              newdata = nd) |> posterior_draws()
-
-mfx <- mfx |> 
-  mutate(entero = exp(log_entero_max_s*sd(data_follow$log_entero_max, na.rm=TRUE) + mean(data_follow$log_entero_max, na.rm=TRUE))) 
-
-ggplot(mfx, aes(x = draw, y = water_contact3, fill = factor(log_entero_max_s))) +
-  stat_halfeye() +
-  geom_vline(xintercept = 0, linetype = "dashed") +
-  labs(x = "Marginal Effect of Enterococci Highest Single Sample Values",
-       y = "Posterior Density",
-       fill = "") +
-  theme_classic() +
-  theme(legend.position = "none") +
-  scale_fill_viridis(discrete=TRUE, option = "turbo") +
-  facet_wrap(~ factor(entero)) +
-  xlim(-0.025, 0.05) 
 
 
 ######################################################
@@ -595,40 +586,50 @@ avg_slopes(m7.1, re_formula = NA, variables = "log_mst_human_mt_max_s", newdata 
 avg_slopes(m7.1, re_formula = NA, variables = "log_mst_human_mt_max_s", newdata = nd, by = "water_contact3")
 
 
-### Marginal effects, conditional on water contact, at specific cut-points
 
-quantile(data_follow$mst_human_mt_max, probs = c(0.5, 0.6, 0.75, 0.9, 0.95, 0.99), na.rm = TRUE)
-quantile(data_follow$log_mst_human_mt_max_s, probs = c(0.5, 0.6, 0.75, 0.9, 0.95, 0.99), na.rm = TRUE)
+### Marginal effects for sensitivity analysis models
 
-# Cut-points of 75th & 95th percentile
+# Time in water (min) model
+
+quantile(data_follow$water_time, probs = c(0.25, 0.5, 0.9, 0.95), na.rm = TRUE)
+quantile(data_follow$water_time_s, probs = c(0.25, 0.5, 0.9, 0.95), na.rm = TRUE)
 
 nd <- data_follow |> 
-  data_grid(water_contact3 = c("Minimal contact", "Body immersion", "Swallowed water"),
-            log_mst_human_mt_max_s = c(0.714, 1.124), 
+  data_grid(water_time_s = seq(-0.9, 11.9, by = 0.5),
+            log_e_coli_max_s = mean(e_coli_max_s, na.rm=TRUE), 
             age4 = c("0-4", "5-9", "10-14", "15-19", "20+"),
             gender = c("woman/girl", "man/boy", "fluid/trans"),
             ethnicity = "White", education2 = "bachelors", cond_GI = "No", other_rec_act = "Yes", 
             beach_exp_food = "Yes", sand_contact = "No", household_group = "No") 
 
-nd <- nd |> mutate(water_contact3 = fct_relevel(water_contact3, "Minimal contact", 
-                                                "Body immersion", "Swallowed water")) 
+avg_slopes(m_watertime, re_formula = NA, variables = "water_time_s", newdata = nd)
 
-mfx <- slopes(m7.1, re_formula = NA, variables = "log_mst_human_mt_max_s", 
-              newdata = nd) |> posterior_draws()
+nd <- data_follow |> 
+  data_grid(water_time_s = quantile(water_time_s, probs = c(0.50, 0.95), na.rm = TRUE),
+            log_e_coli_max_s = seq(-2.1, 1.9, by = 0.1), 
+            age4 = c("0-4", "5-9", "10-14", "15-19", "20+"),
+            gender = c("woman/girl", "man/boy", "fluid/trans"),
+            ethnicity = "White", education2 = "bachelors", cond_GI = "No", other_rec_act = "Yes", 
+            beach_exp_food = "Yes", sand_contact = "No", household_group = "No") 
 
-mfx <- mfx |> 
-  mutate(mst_human_mt = exp(log_mst_human_mt_max_s*sd(data_follow$log_mst_human_mt_max, na.rm=TRUE) + mean(data_follow$log_mst_human_mt_max, na.rm=TRUE))) 
+avg_slopes(m_watertime, re_formula = NA, variables = "log_e_coli_max_s", newdata = nd, by = "water_time_s")
 
-ggplot(mfx, aes(x = draw, y = water_contact3, fill = factor(log_mst_human_mt_max_s))) +
-  stat_halfeye() +
-  geom_vline(xintercept = 0, linetype = "dashed") +
-  labs(x = "Marginal Effect of Human DNA Marker Highest Single Sample Values",
-       y = "Posterior Density",
-       fill = "") +
-  theme_classic() +
-  theme(legend.position = "none") +
-  scale_fill_viridis(discrete=TRUE, option = "turbo") +
-  facet_wrap(~ factor(mst_human_mt)) +
-  xlim(-0.025, 0.05) 
+nd <- data_follow |> 
+  data_grid(water_time_s = seq(-0.9, 11.9, by = 0.5),
+            log_e_coli_max_s = seq(-2.1, 1.9, by = 0.1), 
+            age4 = c("0-4", "5-9", "10-14", "15-19", "20+"),
+            gender = c("woman/girl", "man/boy", "fluid/trans"),
+            ethnicity = "White", education2 = "bachelors", cond_GI = "No", other_rec_act = "Yes", 
+            beach_exp_food = "Yes", sand_contact = "No", household_group = "No")
+
+avg_slopes(m_watertime, re_formula = NA, variables = "log_e_coli_max_s", newdata = nd)
+
+
+
+
+
+
+
+
 
 
