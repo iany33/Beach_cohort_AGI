@@ -342,9 +342,16 @@ ggplot(mfx, aes(x = draw, y = beach, fill = beach)) +
 
 ### Marginal effects for qPCR enterococci model ###
 
+data |> distinct(recruit_date, .keep_all = TRUE) |> 
+  summarize(log_entero_max_s = mean(log_entero_max_s, na.rm=TRUE))
+
+list <- data |> distinct(recruit_date, .keep_all = TRUE) |> 
+  summarize(log_entero_max_s = mean(log_entero_max_s, na.rm=TRUE))
+list <- as.list(list)
+
 nd <- data_follow |> 
   data_grid(water_contact3 = c("No contact", "Minimal contact", "Body immersion", "Swallowed water"),
-            log_entero_max_s = mean(entero_max_s, na.rm=TRUE), 
+            log_entero_max_s = list$log_entero_max_s, 
             age4 = c("0-4", "5-9", "10-14", "15-19", "20+"),
             gender = c("woman/girl", "man/boy", "fluid/trans"),
             ethnicity = "White", education2 = "bachelors", cond_GI = "No", other_rec_act = "Yes", 
@@ -389,7 +396,7 @@ ggplot(mfx, aes(x = draw, y = contrast, fill = contrast)) +
   theme_minimal() +
   theme(legend.position = "none") +
   scale_fill_viridis(discrete=TRUE, option = "turbo") +
-  xlim(-0.5, 70) -> Fig2A
+  xlim(-10, 100) -> Fig2A
 
 # Odds ratio scale
 
@@ -420,12 +427,12 @@ Fig2 + plot_annotation(tag_levels = 'A')
 
 # Predicted probabilities of qPCR Enterococcus relationship, conditional on water contact level
 
-quantile(data_follow$entero_cce_max, na.rm = TRUE)
-quantile(data_follow$log_entero_max_s, na.rm = TRUE)
+data |> distinct(recruit_date, .keep_all = TRUE) |> 
+  summarize(log_entero_max_s = range(log_entero_max_s, na.rm=TRUE))
 
 nd <- data_follow |> 
   data_grid(water_contact3 = c("Minimal contact", "Body immersion", "Swallowed water"),
-            log_entero_max_s = seq(-0.4, 6.6, by = 0.2), 
+            log_entero_max_s = seq(-1.819538, 2.69703, by = 0.2), 
             age4 = c("0-4", "5-9", "10-14", "15-19", "20+"),
             gender = c("woman/girl", "man/boy", "fluid/trans"),
             ethnicity = "White", education2 = "bachelors", cond_GI = "No", other_rec_act = "Yes", 
@@ -447,7 +454,7 @@ ggplot(pred, aes(x = entero, y = draw)) +
        y = "Predicted Probability of AGI",
        fill = "") +
   theme_classic() + 
-  theme(legend.position = "bottom")  -> Fig5b
+  theme(legend.position = "bottom") 
 
 Fig5b <- Fig5b + scale_y_discrete(labels = NULL)
 Fig5 <- Fig5a + Fig5b
@@ -462,18 +469,39 @@ ggplot(pred, aes(x = entero, y = draw)) +
        fill = "") +
   theme_classic() + 
   theme(legend.position = "bottom") +
-  facet_wrap(~ water_contact3)   -> Fig6b
-
-Fig6b <- Fig6b + scale_y_discrete(labels = NULL)
-Fig6 <- Fig6a + Fig6b
-Fig6 + plot_annotation(tag_levels = 'A')
-
+  facet_wrap(~ water_contact3) 
 
 avg_slopes(m5.1, re_formula = NA, variables = "log_entero_max_s", newdata = nd)
 
 avg_slopes(m5.1, re_formula = NA, variables = "log_entero_max_s", newdata = nd, by = "water_contact3")
 
+# Log scale predictions
 
+pred <- pred |> 
+  mutate(log_entero_max = log_entero_max_s*sd(data_follow$log_entero_max, na.rm=TRUE) + mean(data_follow$log_entero_max, na.rm=TRUE)) 
+
+ggplot(pred, aes(x = log_entero_max, y = draw)) +
+  stat_lineribbon() +
+  scale_fill_brewer(palette = "Blues") +
+  labs(x = "Log Enterococci Highest Single Sample",
+       y = "Predicted Probability of AGI",
+       fill = "") +
+  theme_classic() + 
+  theme(legend.position = "bottom")  -> Fig6a
+
+ggplot(pred, aes(x = log_entero_max, y = draw)) +
+  stat_lineribbon() +
+  scale_fill_brewer(palette = "Blues") +
+  labs(x = "Log Enterococci Highest Single Sample",
+       y = "Predicted Probability of AGI",
+       fill = "") +
+  theme_classic() + 
+  theme(legend.position = "bottom") +
+  facet_wrap(~ water_contact3)   -> Fig6b
+
+Fig6b <- Fig6b + scale_y_discrete(labels = NULL)
+Fig6 <- Fig6a + Fig6b
+Fig6 + plot_annotation(tag_levels = 'A')
 
 
 ######################################################
