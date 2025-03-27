@@ -44,7 +44,24 @@ old <- options(pillar.sigfig = 5)
 
 data |> 
   distinct(recruit_date, .keep_all=TRUE) |> 
-  get_summary_stats(e_coli, e_coli_max, entero_cce, entero_cce_max, turbidity) 
+  get_summary_stats(e_coli, e_coli_max, entero_cce, entero_cce_max, 
+                    mst_human, mst_human_max, mst_human_mt, mst_human_mt_max) 
+
+
+data |> distinct(date, mst_human_yn) |> tabyl(mst_human_yn)
+data |> distinct(date, mst_human_mt_yn) |> tabyl(mst_human_mt_yn)
+
+data |> distinct(date, mst_human_yn, site) |> 
+  tabyl(mst_human_yn, site) |> 
+  adorn_percentages("col") |> 
+  adorn_totals("row") |> 
+  adorn_ns() 
+
+data |> distinct(date, mst_human_mt_yn, site) |> 
+  tabyl(mst_human_mt_yn, site) |> 
+  adorn_percentages("col") |> 
+  adorn_totals("row") |> 
+  adorn_ns() 
 
 # Histograms
 

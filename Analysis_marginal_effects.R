@@ -41,9 +41,9 @@ nd <- data_follow |>
 nd <- nd |> mutate(water_contact3 = fct_relevel(water_contact3, "No contact", "Minimal contact", 
                                                 "Body immersion", "Swallowed water")) 
 
-predictions(m4.2, re_formula = NA, by = "water_contact3", type = "response", newdata = nd)
+predictions(m4.2r, re_formula = NA, by = "water_contact3", type = "response", newdata = nd)
 
-pred <- predictions(m4.2, re_formula = NA, by = "water_contact3", type = "response", newdata = nd) |> posterior_draws()
+pred <- predictions(m4.2r, re_formula = NA, by = "water_contact3", type = "response", newdata = nd) |> posterior_draws()
 
 pred <- pred |> mutate(draw = draw*1000)
 
@@ -58,9 +58,9 @@ ggplot(pred, aes(x = draw, y = water_contact3, fill = water_contact3)) +
 
 # Examine marginal effects/contrast of water contact exposure effect - probability scale
 
-avg_comparisons(m4.2, re_formula = NA, variables = "water_contact3", newdata = nd)
+avg_comparisons(m4.2r, re_formula = NA, variables = "water_contact3", newdata = nd)
 
-mfx <- comparisons(m4.2, re_formula = NA, variables = "water_contact3", by = "water_contact3", 
+mfx <- comparisons(m4.2r, re_formula = NA, variables = "water_contact3", by = "water_contact3", 
                    newdata = nd) |> posterior_draws()
 
 mfx <- mfx |> mutate(draw = draw*1000)
@@ -73,25 +73,26 @@ mfx <- mfx |>
 
 ggplot(mfx, aes(x = draw, y = contrast, fill = contrast)) +
   stat_halfeye(slab_alpha = .5)  +
+  geom_vline(xintercept = 0, linetype = "dashed") +
   labs(x = "Water Contact Effect on AGI Incident Risk per 1000 Beachgoers", y = "") +
   theme_minimal() +
   theme(legend.position = "none") +
   scale_fill_viridis(discrete=TRUE, option = "turbo") +
-  xlim(-0.5, 100) -> Fig2A
+  xlim(-10, 100) -> Fig2A
 
 # Odds ratio scale
 
-avg_comparisons(m4.2, re_formula = NA, variables = "water_contact3", newdata = nd,
+avg_comparisons(m4.2r, re_formula = NA, variables = "water_contact3", newdata = nd,
                 comparison = "lnoravg", transform = "exp")
 
-mfx <- comparisons(m4.2, re_formula = NA, comparison = "lnor", transform = "exp", 
+mfx <- comparisons(m4.2r, re_formula = NA, comparison = "lnor", transform = "exp", 
                    variables = "water_contact3",   
                    by = "water_contact3", newdata = nd) |> posterior_draws()
 
 mfx <- mfx |> 
-  mutate(contrast = recode(contrast, "ln(odds(Body immersion) / odds(No contact))" = "Body immersion",
-                           "ln(odds(Swallowed water) / odds(No contact))" = "Swallowed water",
-                           "ln(odds(Minimal contact) / odds(No contact))" = "Minimal contact")) |> 
+  mutate(contrast = recode(contrast, "Body immersion - No contact" = "Body immersion",
+                           "Swallowed water - No contact" = "Swallowed water",
+                           "Minimal contact - No contact" = "Minimal contact")) |> 
   mutate(contrast = fct_relevel(contrast, "Body immersion", after = 1)) 
 
 ggplot(mfx, aes(x = draw, y = contrast, fill = contrast)) +
@@ -109,9 +110,9 @@ Fig2 + plot_annotation(tag_levels = 'A')
 
 # Gender specific estimates 
 
-avg_comparisons(m4.2, re_formula = NA, variables = "water_contact3", newdata = nd, by = "gender")
+avg_comparisons(m4.2r, re_formula = NA, variables = "water_contact3", newdata = nd, by = "gender")
 
-mfx <- comparisons(m4.2, re_formula = NA, variables = "water_contact3", by = "gender",
+mfx <- comparisons(m4.2r, re_formula = NA, variables = "water_contact3", by = "gender",
                    newdata = nd) |> posterior_draws()
 
 mfx <- mfx |> mutate(draw = draw*1000)
@@ -135,9 +136,9 @@ ggplot(mfx, aes(x = draw, y = gender, fill = gender)) +
 
 # Age specific estimates 
 
-avg_comparisons(m4.2, re_formula = NA, variables = "water_contact3", newdata = nd, by = "age4")
+avg_comparisons(m4.2r, re_formula = NA, variables = "water_contact3", newdata = nd, by = "age4")
 
-mfx <- comparisons(m4.2, re_formula = NA, variables = "water_contact3", by = "age4",
+mfx <- comparisons(m4.2r, re_formula = NA, variables = "water_contact3", by = "age4",
                    newdata = nd) |> posterior_draws()
 
 mfx <- mfx |> mutate(draw = draw*1000)
@@ -175,7 +176,7 @@ nd <- data_follow |>
 nd <- nd |> mutate(water_contact3 = fct_relevel(water_contact3, "Minimal contact", 
                                                 "Body immersion", "Swallowed water")) 
 
-pred <- predictions(m4.2, re_formula = NA, type = "response", newdata = nd) |> 
+pred <- predictions(m4.2r, re_formula = NA, type = "response", newdata = nd) |> 
   posterior_draws()
 
 pred <- pred |> 
@@ -227,9 +228,9 @@ ggplot(pred, aes(x = log_e_coli, y = draw)) +
     facet_wrap(~ water_contact3)   -> Fig6a
 
 
-avg_slopes(m4.2, re_formula = NA, variables = "log_e_coli_max_s", newdata = nd)
+avg_slopes(m4.2r, re_formula = NA, variables = "log_e_coli_max_s", newdata = nd)
 
-avg_slopes(m4.2, re_formula = NA, variables = "log_e_coli_max_s", newdata = nd, by = "water_contact3")
+avg_slopes(m4.2r, re_formula = NA, variables = "log_e_coli_max_s", newdata = nd, by = "water_contact3")
 
 
 ### Marginal effects of E. coli, conditional on water contact, at specific cut-points
@@ -256,7 +257,7 @@ nd <- data_follow |>
 nd <- nd |> mutate(water_contact3 = fct_relevel(water_contact3, "No contact", "Minimal contact", 
                                                 "Body immersion", "Swallowed water")) 
 
-mfx <- comparisons(m4.2, re_formula = NA, variables = "water_contact3", by = "log_e_coli_max_s", 
+mfx <- comparisons(m4.2r, re_formula = NA, variables = "water_contact3", by = "log_e_coli_max_s", 
                    newdata = nd) |> posterior_draws()
 
 mfx <- mfx |> mutate(e_coli = exp(log_e_coli_max_s*sd(data_follow$log_e_coli_max, na.rm=TRUE) + mean(data_follow$log_e_coli_max, na.rm=TRUE))) |> 
@@ -279,7 +280,7 @@ ggplot(mfx, aes(x = draw, y = contrast, fill = factor(log_e_coli_max_s))) +
   facet_wrap(~ factor(e_coli)) +
   xlim(-15, 150)
 
-comparisons(m4.2, re_formula = NA, variables = "water_contact3", by = "log_e_coli_max_s", 
+comparisons(m4.2r, re_formula = NA, variables = "water_contact3", by = "log_e_coli_max_s", 
             newdata = nd, hypothesis = "b3 - b1 = 0")
 
 
@@ -302,7 +303,7 @@ nd <- data_follow |>
 nd <- nd |> mutate(water_contact3 = fct_relevel(water_contact3, "No contact", "Minimal contact", 
                                                 "Body immersion", "Swallowed water")) 
 
-pred <- predictions(m4.2, re_formula = ~ (1 | beach), type = "response", newdata = nd) |> posterior_draws()
+pred <- predictions(m4.2r, re_formula = ~ (1 | beach), type = "response", newdata = nd) |> posterior_draws()
 
 pred <- pred |> mutate(draw = draw*1000)
 
@@ -316,10 +317,10 @@ ggplot(pred, aes(x = draw, y = beach, fill = beach)) +
   scale_fill_viridis(discrete=TRUE, option = "turbo") +
   xlim(0, 300) 
 
-avg_comparisons(m4.2, re_formula = ~ (1 | beach),
+avg_comparisons(m4.2r, re_formula = ~ (1 | beach),
                 variables = "water_contact3", newdata = nd, by = "beach")
 
-mfx <- comparisons(m4.2, re_formula = ~ (1 | beach), variables = "water_contact3", by = "beach",
+mfx <- comparisons(m4.2r, re_formula = ~ (1 | beach), variables = "water_contact3", by = "beach",
                    newdata = nd) |> posterior_draws()
 
 mfx <- mfx |> mutate(draw = draw*1000)
