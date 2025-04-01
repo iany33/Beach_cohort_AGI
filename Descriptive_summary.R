@@ -38,6 +38,12 @@ data |>
 data_follow |> tabyl(agi3)
 data_follow |> tabyl(diarrhea3)
 
+data_follow |> group_by(house_id) |> 
+  mutate(n = n(), house_size = case_when(
+    n == 1 ~ 1, n == 2 ~ 2, n == 3 ~ 3,
+    n == 4 ~ 4, n == 5 ~ 5, n == 6 ~ 6)) |> 
+  tabyl(house_size)
+
 # FIB summary stats
 
 old <- options(pillar.sigfig = 5)

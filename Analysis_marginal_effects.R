@@ -29,7 +29,6 @@ list <- data |> distinct(recruit_date, .keep_all = TRUE) |>
   summarize(log_e_coli_max_s = mean(log_e_coli_max_s, na.rm=TRUE))
 list <- as.list(list)
 
-
 nd <- data_follow |> 
   data_grid(water_contact3 = c("No contact", "Minimal contact", "Body immersion", "Swallowed water"),
             log_e_coli_max_s = list$log_e_coli_max_s, 
@@ -90,9 +89,9 @@ mfx <- comparisons(m4.2r, re_formula = NA, comparison = "lnor", transform = "exp
                    by = "water_contact3", newdata = nd) |> posterior_draws()
 
 mfx <- mfx |> 
-  mutate(contrast = recode(contrast, "Body immersion - No contact" = "Body immersion",
-                           "Swallowed water - No contact" = "Swallowed water",
-                           "Minimal contact - No contact" = "Minimal contact")) |> 
+  mutate(contrast = recode(contrast, "ln(odds(Body immersion) / odds(No contact))" = "Body immersion",
+                           "ln(odds(Swallowed water) / odds(No contact))" = "Swallowed water",
+                           "ln(odds(Minimal contact) / odds(No contact))" = "Minimal contact")) |> 
   mutate(contrast = fct_relevel(contrast, "Body immersion", after = 1)) 
 
 ggplot(mfx, aes(x = draw, y = contrast, fill = contrast)) +
@@ -127,10 +126,11 @@ mfx <- mfx |>
 
 ggplot(mfx, aes(x = draw, y = gender, fill = gender)) +
   stat_halfeye(slab_alpha = .5)  +
+  geom_vline(xintercept = 0, linetype = "dashed") +
   labs(x = "Effect of Water Contact on AGI Incident Risk per 1000 Beachgoers", y = "") +
   theme_minimal() +
   theme(legend.position = "none") +
-  xlim(-0.5, 100) +
+  xlim(-10, 100) +
   scale_fill_viridis(discrete=TRUE, option = "turbo") +
   facet_wrap(~ contrast)
 
@@ -152,10 +152,11 @@ mfx <- mfx |>
 
 ggplot(mfx, aes(x = draw, y = age4, fill = age4)) +
   stat_halfeye(slab_alpha = .5)  +
+  geom_vline(xintercept = 0, linetype = "dashed") +
   labs(x = "Effect of Water Contact on AGI Incident Risk per 1000 Beachgoers", y = "") +
   theme_minimal() +
   theme(legend.position = "none") +
-  xlim(-0.5, 50) +
+  xlim(-10, 70) +
   scale_fill_viridis(discrete=TRUE, option = "turbo") +
   facet_wrap(~ contrast)
 
@@ -215,7 +216,7 @@ ggplot(pred, aes(x = log_e_coli, y = draw)) +
        y = "Predicted Probability of AGI",
        fill = "") +
   theme_classic() + 
-  theme(legend.position = "bottom")  -> Fig5a
+  theme(legend.position = "bottom")
 
 ggplot(pred, aes(x = log_e_coli, y = draw)) +
   stat_lineribbon() +
@@ -225,7 +226,7 @@ ggplot(pred, aes(x = log_e_coli, y = draw)) +
        fill = "") +
   theme_classic() + 
   theme(legend.position = "bottom") +
-    facet_wrap(~ water_contact3)   -> Fig6a
+    facet_wrap(~ water_contact3)   -> Fig5a
 
 
 avg_slopes(m4.2r, re_formula = NA, variables = "log_e_coli_max_s", newdata = nd)
@@ -333,10 +334,11 @@ mfx <- mfx |>
 
 ggplot(mfx, aes(x = draw, y = beach, fill = beach)) +
   stat_halfeye(slab_alpha = .5)  +
+  geom_vline(xintercept = 0, linetype = "dashed") +
   labs(x = "Effect of Water Contact on AGI Incident Risk per 1000 Beachgoers", y = "") +
   theme_minimal() +
   theme(legend.position = "none") +
-  xlim(-0.5, 50) +
+  xlim(-10, 50) +
   scale_fill_viridis(discrete=TRUE, option = "turbo") +
   facet_wrap(~ contrast)
 
@@ -397,7 +399,7 @@ ggplot(mfx, aes(x = draw, y = contrast, fill = contrast)) +
   theme_minimal() +
   theme(legend.position = "none") +
   scale_fill_viridis(discrete=TRUE, option = "turbo") +
-  xlim(-10, 100) -> Fig2A
+  xlim(-10, 100) 
 
 # Odds ratio scale
 
@@ -420,11 +422,8 @@ ggplot(mfx, aes(x = exp(draw), y = contrast, fill = contrast)) +
   theme_minimal() +
   theme(legend.position = "none") +
   scale_fill_viridis(discrete=TRUE, option = "turbo") +
-  xlim(0, 6) -> Fig2B
+  xlim(0, 6) 
 
-Fig2B <- Fig2B + scale_y_discrete(labels = NULL)
-Fig2 <- Fig2A + Fig2B
-Fig2 + plot_annotation(tag_levels = 'A')
 
 # Predicted probabilities of qPCR Enterococcus relationship, conditional on water contact level
 
@@ -457,11 +456,6 @@ ggplot(pred, aes(x = entero, y = draw)) +
   theme_classic() + 
   theme(legend.position = "bottom") 
 
-Fig5b <- Fig5b + scale_y_discrete(labels = NULL)
-Fig5 <- Fig5a + Fig5b
-Fig5 + plot_annotation(tag_levels = 'A')
-
-
 ggplot(pred, aes(x = entero, y = draw)) +
   stat_lineribbon() +
   scale_fill_brewer(palette = "Blues") +
@@ -488,7 +482,7 @@ ggplot(pred, aes(x = log_entero_max, y = draw)) +
        y = "Predicted Probability of AGI",
        fill = "") +
   theme_classic() + 
-  theme(legend.position = "bottom")  -> Fig6a
+  theme(legend.position = "bottom")  
 
 ggplot(pred, aes(x = log_entero_max, y = draw)) +
   stat_lineribbon() +
@@ -498,11 +492,7 @@ ggplot(pred, aes(x = log_entero_max, y = draw)) +
        fill = "") +
   theme_classic() + 
   theme(legend.position = "bottom") +
-  facet_wrap(~ water_contact3)   -> Fig6b
-
-Fig6b <- Fig6b + scale_y_discrete(labels = NULL)
-Fig6 <- Fig6a + Fig6b
-Fig6 + plot_annotation(tag_levels = 'A')
+  facet_wrap(~ water_contact3)   -> Fig5b
 
 
 ######################################################
@@ -555,7 +545,7 @@ ggplot(mfx, aes(x = draw, y = contrast, fill = contrast)) +
   theme_minimal() +
   theme(legend.position = "none") +
   scale_fill_viridis(discrete=TRUE, option = "turbo") +
-  xlim(-0.5, 70) -> Fig2A
+  xlim(-0.5, 70) 
 
 # Odds ratio scale
 
@@ -578,11 +568,7 @@ ggplot(mfx, aes(x = exp(draw), y = contrast, fill = contrast)) +
   theme_minimal() +
   theme(legend.position = "none") +
   scale_fill_viridis(discrete=TRUE, option = "turbo") +
-  xlim(0, 6) -> Fig2B
-
-Fig2B <- Fig2B + scale_y_discrete(labels = NULL)
-Fig2 <- Fig2A + Fig2B
-Fig2 + plot_annotation(tag_levels = 'A')
+  xlim(0, 6) 
 
 # Predicted probabilities of MST relationship, conditional on water contact level
 
@@ -613,26 +599,30 @@ ggplot(pred, aes(x = mst_human_mt, y = draw)) +
        y = "Predicted Probability of AGI",
        fill = "") +
   theme_classic() + 
-  theme(legend.position = "bottom")  -> Fig5b
+  theme(legend.position = "bottom") +
+  facet_wrap(~ water_contact3)  
 
-Fig5b <- Fig5b + scale_y_discrete(labels = NULL)
-Fig5 <- Fig5a + Fig5b
-Fig5 + plot_annotation(tag_levels = 'A')
+# Log scale predictions
 
+pred <- pred |> 
+  mutate(log_mst_human_mt = log_mst_human_mt_max_s*sd(data_follow$log_mst_human_mt_max, na.rm=TRUE) + mean(data_follow$log_mst_human_mt_max, na.rm=TRUE)) 
 
-ggplot(pred, aes(x = mst_human_mt, y = draw)) +
+ggplot(pred, aes(x = log_mst_human_mt, y = draw)) +
   stat_lineribbon() +
   scale_fill_brewer(palette = "Blues") +
-  labs(x = "Human Mitochondrial DNA Highest Single Sample",
+  labs(x = "Log Human Mitochondrial DNA Highest Single Sample",
        y = "Predicted Probability of AGI",
        fill = "") +
   theme_classic() + 
   theme(legend.position = "bottom") +
-  facet_wrap(~ water_contact3)   -> Fig6b
+  facet_wrap(~ water_contact3)   -> Fig5c
 
-Fig6b <- Fig6b + scale_y_discrete(labels = NULL)
-Fig6 <- Fig6a + Fig6b
-Fig6 + plot_annotation(tag_levels = 'A')
+
+Fig5b <- Fig5b + scale_y_discrete(labels = NULL)
+Fig5c <- Fig5c + scale_y_discrete(labels = NULL)
+Fig5 <- Fig5a + Fig5b + Fig5c
+Fig5 + plot_annotation(tag_levels = 'A')
+
 
 
 avg_slopes(m7.1, re_formula = NA, variables = "log_mst_human_mt_max_s", newdata = nd)
@@ -645,12 +635,16 @@ avg_slopes(m7.1, re_formula = NA, variables = "log_mst_human_mt_max_s", newdata 
 
 # Time in water (min) model
 
-quantile(data_follow$water_time, probs = c(0.25, 0.5, 0.9, 0.95), na.rm = TRUE)
-quantile(data_follow$water_time_s, probs = c(0.25, 0.5, 0.9, 0.95), na.rm = TRUE)
+quantile(data_follow$water_time, na.rm = TRUE)
+quantile(data_follow$water_time_s, na.rm = TRUE)
+
+list <- data |> distinct(recruit_date, .keep_all = TRUE) |> 
+  summarize(log_e_coli_max_s = mean(log_e_coli_max_s, na.rm=TRUE))
+list <- as.list(list)
 
 nd <- data_follow |> 
   data_grid(water_time_s = seq(-0.9, 11.9, by = 0.5),
-            log_e_coli_max_s = mean(e_coli_max_s, na.rm=TRUE), 
+            log_e_coli_max_s = list$log_e_coli_max_s, 
             age4 = c("0-4", "5-9", "10-14", "15-19", "20+"),
             gender = c("woman/girl", "man/boy", "fluid/trans"),
             ethnicity = "White", education2 = "bachelors", cond_GI = "No", other_rec_act = "Yes", 
@@ -659,8 +653,8 @@ nd <- data_follow |>
 avg_slopes(m_watertime, re_formula = NA, variables = "water_time_s", newdata = nd)
 
 nd <- data_follow |> 
-  data_grid(water_time_s = quantile(water_time_s, probs = c(0.50, 0.95), na.rm = TRUE),
-            log_e_coli_max_s = seq(-2.1, 1.9, by = 0.1), 
+  data_grid(water_time_s = quantile(water_time_s, probs = c(0.25, 0.50, 0.75, 0.95), na.rm = TRUE),
+            log_e_coli_max_s = seq(-2.35034, 1.823747, by = 0.2), 
             age4 = c("0-4", "5-9", "10-14", "15-19", "20+"),
             gender = c("woman/girl", "man/boy", "fluid/trans"),
             ethnicity = "White", education2 = "bachelors", cond_GI = "No", other_rec_act = "Yes", 
@@ -670,7 +664,7 @@ avg_slopes(m_watertime, re_formula = NA, variables = "log_e_coli_max_s", newdata
 
 nd <- data_follow |> 
   data_grid(water_time_s = seq(-0.9, 11.9, by = 0.5),
-            log_e_coli_max_s = seq(-2.1, 1.9, by = 0.1), 
+            log_e_coli_max_s = seq(-2.35034, 1.823747, by = 0.2), 
             age4 = c("0-4", "5-9", "10-14", "15-19", "20+"),
             gender = c("woman/girl", "man/boy", "fluid/trans"),
             ethnicity = "White", education2 = "bachelors", cond_GI = "No", other_rec_act = "Yes", 
@@ -678,12 +672,157 @@ nd <- data_follow |>
 
 avg_slopes(m_watertime, re_formula = NA, variables = "log_e_coli_max_s", newdata = nd)
 
+# Alternative outcomes, follow-up, and prior models
+
+list <- data |> distinct(recruit_date, .keep_all = TRUE) |> 
+  summarize(log_e_coli_max_s = mean(log_e_coli_max_s, na.rm=TRUE))
+list <- as.list(list)
+
+nd <- data_follow |> 
+  data_grid(water_contact3 = c("No contact", "Minimal contact", "Body immersion", "Swallowed water"),
+            log_e_coli_max_s = list$log_e_coli_max_s, 
+            age4 = c("0-4", "5-9", "10-14", "15-19", "20+"),
+            gender = c("woman/girl", "man/boy", "fluid/trans"),
+            ethnicity = "White", education2 = "bachelors", cond_GI = "No", other_rec_act = "Yes", 
+            beach_exp_food = "Yes", sand_contact = "No", household_group = "No") 
+
+avg_comparisons(m_diar, re_formula = NA, variables = "water_contact3", newdata = nd)
+
+avg_comparisons(m_diar, re_formula = NA, variables = "water_contact3", newdata = nd,
+                comparison = "lnoravg", transform = "exp")
+
+avg_comparisons(m_3day, re_formula = NA, variables = "water_contact3", newdata = nd)
+
+avg_comparisons(m_3day, re_formula = NA, variables = "water_contact3", newdata = nd,
+                comparison = "lnoravg", transform = "exp")
+
+avg_comparisons(m_5day, re_formula = NA, variables = "water_contact3", newdata = nd)
+
+avg_comparisons(m_5day, re_formula = NA, variables = "water_contact3", newdata = nd,
+                comparison = "lnoravg", transform = "exp")
+
+avg_comparisons(m_strong, re_formula = NA, variables = "water_contact3", newdata = nd)
+
+avg_comparisons(m_strong, re_formula = NA, variables = "water_contact3", newdata = nd,
+                comparison = "lnoravg", transform = "exp")
+
+avg_comparisons(m_weak, re_formula = NA, variables = "water_contact3", newdata = nd)
+
+avg_comparisons(m_weak, re_formula = NA, variables = "water_contact3", newdata = nd,
+                comparison = "lnoravg", transform = "exp")
 
 
+data |> distinct(recruit_date, .keep_all = TRUE) |> 
+  summarize(log_e_coli_max_s = range(log_e_coli_max_s, na.rm=TRUE))
+
+nd <- data_follow |> 
+  data_grid(water_contact3 = c("Minimal contact", "Body immersion", "Swallowed water"),
+            log_e_coli_max_s = seq(-2.35034, 1.823747, by = 0.2), 
+            age4 = c("0-4", "5-9", "10-14", "15-19", "20+"),
+            gender = c("woman/girl", "man/boy", "fluid/trans"),
+            ethnicity = "White", education2 = "bachelors", cond_GI = "No", other_rec_act = "Yes", 
+            beach_exp_food = "Yes", sand_contact = "No", household_group = "No") 
+
+nd <- nd |> mutate(water_contact3 = fct_relevel(water_contact3, "Minimal contact", 
+                                                "Body immersion", "Swallowed water")) 
+
+avg_slopes(m_diar, re_formula = NA, variables = "log_e_coli_max_s", newdata = nd)
+
+avg_slopes(m_diar, re_formula = NA, variables = "log_e_coli_max_s", newdata = nd, by = "water_contact3")
+
+avg_slopes(m_3day, re_formula = NA, variables = "log_e_coli_max_s", newdata = nd)
+
+avg_slopes(m_3day, re_formula = NA, variables = "log_e_coli_max_s", newdata = nd, by = "water_contact3")
+
+avg_slopes(m_5day, re_formula = NA, variables = "log_e_coli_max_s", newdata = nd)
+
+avg_slopes(m_5day, re_formula = NA, variables = "log_e_coli_max_s", newdata = nd, by = "water_contact3")
+
+avg_slopes(m_strong, re_formula = NA, variables = "log_e_coli_max_s", newdata = nd)
+
+avg_slopes(m_strong, re_formula = NA, variables = "log_e_coli_max_s", newdata = nd, by = "water_contact3")
+
+avg_slopes(m_weak, re_formula = NA, variables = "log_e_coli_max_s", newdata = nd)
+
+avg_slopes(m_weak, re_formula = NA, variables = "log_e_coli_max_s", newdata = nd, by = "water_contact3")
 
 
+pred <- predictions(m_diar, re_formula = NA, type = "response", newdata = nd) |> posterior_draws()
+
+pred <- pred |> 
+  mutate(log_e_coli = log_e_coli_max_s*sd(data_follow$log_e_coli_max, na.rm=TRUE) + mean(data_follow$log_e_coli_max, na.rm=TRUE)) 
+
+ggplot(pred, aes(x = log_e_coli, y = draw)) +
+  stat_lineribbon() +
+  scale_fill_brewer(palette = "Blues") +
+  labs(x = "Log E. coli Highest Single Sample",
+       y = "Predicted Probability of AGI",
+       fill = "") +
+  theme_classic() + 
+  theme(legend.position = "bottom") +
+  facet_wrap(~ water_contact3)
+
+pred <- predictions(m_3day, re_formula = NA, type = "response", newdata = nd) |> posterior_draws()
+
+pred <- pred |> 
+  mutate(log_e_coli = log_e_coli_max_s*sd(data_follow$log_e_coli_max, na.rm=TRUE) + mean(data_follow$log_e_coli_max, na.rm=TRUE)) 
+
+ggplot(pred, aes(x = log_e_coli, y = draw)) +
+  stat_lineribbon() +
+  scale_fill_brewer(palette = "Blues") +
+  labs(x = "Log E. coli Highest Single Sample",
+       y = "Predicted Probability of AGI",
+       fill = "") +
+  theme_classic() + 
+  theme(legend.position = "bottom") +
+  facet_wrap(~ water_contact3)
 
 
+pred <- predictions(m_5day, re_formula = NA, type = "response", newdata = nd) |> posterior_draws()
 
+pred <- pred |> 
+  mutate(log_e_coli = log_e_coli_max_s*sd(data_follow$log_e_coli_max, na.rm=TRUE) + mean(data_follow$log_e_coli_max, na.rm=TRUE)) 
+
+ggplot(pred, aes(x = log_e_coli, y = draw)) +
+  stat_lineribbon() +
+  scale_fill_brewer(palette = "Blues") +
+  labs(x = "Log E. coli Highest Single Sample",
+       y = "Predicted Probability of AGI",
+       fill = "") +
+  theme_classic() + 
+  theme(legend.position = "bottom") +
+  facet_wrap(~ water_contact3)
+
+
+pred <- predictions(m_strong, re_formula = NA, type = "response", newdata = nd) |> posterior_draws()
+
+pred <- pred |> 
+  mutate(log_e_coli = log_e_coli_max_s*sd(data_follow$log_e_coli_max, na.rm=TRUE) + mean(data_follow$log_e_coli_max, na.rm=TRUE)) 
+
+ggplot(pred, aes(x = log_e_coli, y = draw)) +
+  stat_lineribbon() +
+  scale_fill_brewer(palette = "Blues") +
+  labs(x = "Log E. coli Highest Single Sample",
+       y = "Predicted Probability of AGI",
+       fill = "") +
+  theme_classic() + 
+  theme(legend.position = "bottom") +
+  facet_wrap(~ water_contact3)
+
+
+pred <- predictions(m_weak, re_formula = NA, type = "response", newdata = nd) |> posterior_draws()
+
+pred <- pred |> 
+  mutate(log_e_coli = log_e_coli_max_s*sd(data_follow$log_e_coli_max, na.rm=TRUE) + mean(data_follow$log_e_coli_max, na.rm=TRUE)) 
+
+ggplot(pred, aes(x = log_e_coli, y = draw)) +
+  stat_lineribbon() +
+  scale_fill_brewer(palette = "Blues") +
+  labs(x = "Log E. coli Highest Single Sample",
+       y = "Predicted Probability of AGI",
+       fill = "") +
+  theme_classic() + 
+  theme(legend.position = "bottom") +
+  facet_wrap(~ water_contact3)
 
 
