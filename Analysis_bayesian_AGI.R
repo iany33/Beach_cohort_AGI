@@ -367,6 +367,43 @@ conditional_effects(m7.1, effects = "water_contact3")
 
 loo(m7, m7.1)
 
+### Compare to model with MST Seagull marker (expected to not have any association with AGI)
+
+m8 <- brm(agi3 ~ mo(water_contact3)*log_mst_gull_s + age4 + gender + education2 + ethnicity + cond_GI + 
+            other_rec_act + beach_exp_food + sand_contact + household_group +
+            (mo(water_contact3) | beach/recruit_date),
+          family = bernoulli, data = data_follow, prior = priors_rslopes,
+          iter = 2000, chains = 4, cores = 4, warmup = 1000, seed = 123, control = list(adapt_delta = 0.95),
+          backend = "cmdstanr", stan_model_args = list(stanc_options = list("O1")))
+
+summary(m8, robust = TRUE)
+get_variables(m8)
+plot(m8)
+pp_check(m8, ndraws=100)
+pp_check(m8, type = "stat", stat = "mean")
+
+conditional_effects(m8, effects = "log_mst_gull_s:water_contact3")
+conditional_effects(m8, effects = "water_contact3")
+
+m8.1 <- brm(agi3 ~ mo(water_contact3)*log_mst_gull_max_s + age4 + gender + education2 + ethnicity + cond_GI + 
+              other_rec_act + beach_exp_food + sand_contact + household_group +
+              (mo(water_contact3) | beach/recruit_date),
+            family = bernoulli, data = data_follow, prior = priors_rslopes,
+            iter = 2000, chains = 4, cores = 4, warmup = 1000, seed = 123, control = list(adapt_delta = 0.95),
+            backend = "cmdstanr", stan_model_args = list(stanc_options = list("O1")))
+
+summary(m8.1, robust = TRUE)
+get_variables(m8.1)
+plot(m8.1)
+pp_check(m8.1, ndraws=100)
+pp_check(m8.1, type = "stat", stat = "mean")
+
+conditional_effects(m8.1, effects = "log_mst_gull_max_s:water_contact3")
+conditional_effects(m8.1, effects = "water_contact3")
+
+loo(m8, m8.1)
+
+
 ## Reproduce other FIB models with same number of observations for LOO comparisons
 
 data_follow_entero <- data_follow |> 
@@ -392,9 +429,8 @@ m4.2_mst <- brm(agi3 ~ mo(water_contact3)*log_e_coli_max_s + age4 + gender + edu
                  iter = 2000, chains = 4, cores = 4, warmup = 1000, seed = 123, control = list(adapt_delta = 0.95),
                  backend = "cmdstanr", stan_model_args = list(stanc_options = list("O1")))
 
-loo(m4.2_mst, m6.1)
+loo(m4.2_mst, m6.1, m8.1)
 
-loo(m4.2_comp, m7.1)
 loo(m4.2_comp, m5.1, m7.1)
 
 

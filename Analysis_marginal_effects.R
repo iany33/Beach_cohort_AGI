@@ -623,11 +623,101 @@ Fig5c <- Fig5c + scale_y_discrete(labels = NULL)
 Fig5 <- Fig5a + Fig5b + Fig5c
 Fig5 + plot_annotation(tag_levels = 'A')
 
-
-
 avg_slopes(m7.1, re_formula = NA, variables = "log_mst_human_mt_max_s", newdata = nd)
 
 avg_slopes(m7.1, re_formula = NA, variables = "log_mst_human_mt_max_s", newdata = nd, by = "water_contact3")
+
+
+### Marginal effects for MST human sewage biomarker model ###
+
+data |> distinct(recruit_date, .keep_all = TRUE) |> 
+  summarize(log_mst_human_max_s = range(log_mst_human_max_s, na.rm=TRUE))
+
+nd <- data_follow |> 
+  data_grid(water_contact3 = c("Minimal contact", "Body immersion", "Swallowed water"),
+            log_mst_human_max_s = seq(-1.1744, 1.673346, by = 0.1), 
+            age4 = c("0-4", "5-9", "10-14", "15-19", "20+"),
+            gender = c("woman/girl", "man/boy", "fluid/trans"),
+            ethnicity = "White", education2 = "bachelors", cond_GI = "No", other_rec_act = "Yes", 
+            beach_exp_food = "Yes", sand_contact = "No", household_group = "No") 
+
+nd <- nd |> mutate(water_contact3 = fct_relevel(water_contact3, "Minimal contact", 
+                                                "Body immersion", "Swallowed water")) 
+
+pred <- predictions(m6.1, re_formula = NA, type = "response", newdata = nd) |> 
+  posterior_draws()
+
+pred <- pred |> 
+  mutate(log_mst_human = log_mst_human_max_s*sd(data_follow$log_mst_human_max, na.rm=TRUE) + mean(data_follow$log_mst_human_max, na.rm=TRUE)) 
+
+ggplot(pred, aes(x = log_mst_human, y = draw)) +
+  stat_lineribbon() +
+  scale_fill_brewer(palette = "Blues") +
+  labs(x = "Log Human Sewage Biomarker Highest Single Sample",
+       y = "Predicted Probability of AGI",
+       fill = "") +
+  theme_classic() + 
+  theme(legend.position = "bottom")
+
+ggplot(pred, aes(x = log_mst_human, y = draw)) +
+  stat_lineribbon() +
+  scale_fill_brewer(palette = "Blues") +
+  labs(x = "Log Human Sewage Biomarker Highest Single Sample",
+       y = "Predicted Probability of AGI",
+       fill = "") +
+  theme_classic() + 
+  theme(legend.position = "bottom") +
+  facet_wrap(~ water_contact3)   
+
+avg_slopes(m6.1, re_formula = NA, variables = "log_mst_human_max_s", newdata = nd)
+
+avg_slopes(m6.1, re_formula = NA, variables = "log_mst_human_max_s", newdata = nd, by = "water_contact3")
+
+
+### MST seagull marker model
+
+data |> distinct(recruit_date, .keep_all = TRUE) |> 
+  summarize(log_mst_gull_max_s = range(log_mst_gull_max_s, na.rm=TRUE))
+
+nd <- data_follow |> 
+  data_grid(water_contact3 = c("Minimal contact", "Body immersion", "Swallowed water"),
+            log_mst_gull_max_s = seq(-1.877628, 2.063006, by = 0.2), 
+            age4 = c("0-4", "5-9", "10-14", "15-19", "20+"),
+            gender = c("woman/girl", "man/boy", "fluid/trans"),
+            ethnicity = "White", education2 = "bachelors", cond_GI = "No", other_rec_act = "Yes", 
+            beach_exp_food = "Yes", sand_contact = "No", household_group = "No") 
+
+nd <- nd |> mutate(water_contact3 = fct_relevel(water_contact3, "Minimal contact", 
+                                                "Body immersion", "Swallowed water")) 
+
+pred <- predictions(m8.1, re_formula = NA, type = "response", newdata = nd) |> 
+  posterior_draws()
+
+pred <- pred |> 
+  mutate(log_mst_gull_max = log_mst_gull_max_s*sd(data_follow$log_mst_gull_max, na.rm=TRUE) + mean(data_follow$log_mst_gull_max, na.rm=TRUE)) 
+
+ggplot(pred, aes(x = log_mst_gull_max, y = draw)) +
+  stat_lineribbon() +
+  scale_fill_brewer(palette = "Blues") +
+  labs(x = "Log MST Seagull Biomarker Highest Single Sample",
+       y = "Predicted Probability of AGI",
+       fill = "") +
+  theme_classic() + 
+  theme(legend.position = "bottom")  
+
+ggplot(pred, aes(x = log_mst_gull_max, y = draw)) +
+  stat_lineribbon() +
+  scale_fill_brewer(palette = "Blues") +
+  labs(x = "Log MST Seagull Biomarker Highest Single Sample",
+       y = "Predicted Probability of AGI",
+       fill = "") +
+  theme_classic() + 
+  theme(legend.position = "bottom") +
+  facet_wrap(~ water_contact3)  
+
+avg_slopes(m8.1, re_formula = NA, variables = "log_entero_max_s", newdata = nd)
+
+avg_slopes(m8.1, re_formula = NA, variables = "log_entero_max_s", newdata = nd, by = "water_contact3")
 
 
 
@@ -824,5 +914,8 @@ ggplot(pred, aes(x = log_e_coli, y = draw)) +
   theme_classic() + 
   theme(legend.position = "bottom") +
   facet_wrap(~ water_contact3)
+
+
+
 
 
