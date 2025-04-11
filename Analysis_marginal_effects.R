@@ -42,7 +42,7 @@ nd <- nd |> mutate(water_contact3 = fct_relevel(water_contact3, "No contact", "M
 
 predictions(m4.2r, re_formula = NA, by = "water_contact3", type = "response", newdata = nd)
 
-pred <- predictions(m4.2r, re_formula = NA, by = "water_contact3", type = "response", newdata = nd) |> posterior_draws()
+pred <- predictions(m4.2r, re_formula = NA, by = "water_contact3", type = "response", newdata = nd) |> get_draws()
 
 pred <- pred |> mutate(draw = draw*1000)
 
@@ -177,11 +177,14 @@ nd <- data_follow |>
 nd <- nd |> mutate(water_contact3 = fct_relevel(water_contact3, "Minimal contact", 
                                                 "Body immersion", "Swallowed water")) 
 
-pred <- predictions(m4.2r, re_formula = NA, type = "response", newdata = nd) |> 
-  posterior_draws()
+pred <- predictions(m4.2r, re_formula = NA, by = c("water_contact3", "log_e_coli_max_s"), 
+                    type = "response", newdata = nd) |> get_draws()
 
 pred <- pred |> 
   mutate(e_coli = exp(log_e_coli_max_s*sd(data_follow$log_e_coli_max, na.rm=TRUE) + mean(data_follow$log_e_coli_max, na.rm=TRUE))) 
+
+pred <- pred |> 
+  mutate(log_e_coli = log_e_coli_max_s*sd(data_follow$log_e_coli_max, na.rm=TRUE) + mean(data_follow$log_e_coli_max, na.rm=TRUE)) 
 
 ggplot(pred, aes(x = e_coli, y = draw)) +
   stat_lineribbon() +
@@ -206,9 +209,6 @@ ggplot(pred, aes(x = e_coli, y = draw)) +
 
 # Predictions on log scale
 
-pred <- pred |> 
-  mutate(log_e_coli = log_e_coli_max_s*sd(data_follow$log_e_coli_max, na.rm=TRUE) + mean(data_follow$log_e_coli_max, na.rm=TRUE)) 
-
 ggplot(pred, aes(x = log_e_coli, y = draw)) +
   stat_lineribbon() +
   scale_fill_brewer(palette = "Blues") +
@@ -228,6 +228,15 @@ ggplot(pred, aes(x = log_e_coli, y = draw)) +
   theme(legend.position = "bottom") +
     facet_wrap(~ water_contact3)   -> Fig5a
 
+# Predicted median and 95% CI values of E. coli cut-points stratified by water contact 
+
+e_coli_predictions <- pred |> 
+  group_by(water_contact3, e_coli) |> 
+  summarize(median = median(draw),
+            lower = quantile(draw, 0.025),
+            upper = quantile(draw, 0.975))
+
+# Average slope
 
 avg_slopes(m4.2r, re_formula = NA, variables = "log_e_coli_max_s", newdata = nd)
 
@@ -274,15 +283,30 @@ mfx <- mfx |>
 ggplot(mfx, aes(x = draw, y = contrast, fill = factor(log_e_coli_max_s))) +
   stat_halfeye(slab_alpha = .5)  +
   geom_vline(xintercept = 0, linetype = "dashed") +
-  labs(x = "E. coli Effect on AGI Incident Risk per 1000 Beachgoers at Specific Values", y = "") +
+  labs(x = "Water Contact Effect on AGI Incident Risk per 1000 Beachgoers at Specific E. coli Values", y = "") +
   theme_minimal() +
   theme(legend.position = "none") +
   scale_fill_viridis(discrete=TRUE, option = "turbo") +
   facet_wrap(~ factor(e_coli)) +
   xlim(-15, 150)
 
-comparisons(m4.2r, re_formula = NA, variables = "water_contact3", by = "log_e_coli_max_s", 
-            newdata = nd, hypothesis = "b3 - b1 = 0")
+ggplot(mfx, aes(x = draw, y = factor(e_coli), fill = factor(log_e_coli_max_s))) +
+  stat_halfeye(slab_alpha = .5)  +
+  geom_vline(xintercept = 0, linetype = "dashed") +
+  labs(x = "E. coli Effect on AGI Incident Risk per 1000 Beachgoers at Specific Values", y = "") +
+  theme_minimal() +
+  theme(legend.position = "none") +
+  scale_fill_viridis(discrete=TRUE, option = "turbo") +
+  facet_wrap(~ contrast) +
+  xlim(-15, 150)
+
+# Average comparisons 
+
+avg_comparisons(m4.2r, re_formula = NA, variables = "water_contact3", newdata = nd, by = "log_e_coli_max_s")
+
+avg_comparisons(m4.2r, re_formula = NA, variables = "water_contact3", by = "log_e_coli_max_s",
+                newdata = nd, comparison = "lnoravg", transform = "exp")
+
 
 
 ### Beach-specific posterior probabilities and contrasts
