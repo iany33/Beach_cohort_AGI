@@ -331,6 +331,26 @@ conditional_effects(m6.1, effects = "water_contact3")
 
 loo(m6, m6.1)
 
+# Given many non-detect days with 0s, check ordinal version based on quartiles
+
+m6.2 <- brm(agi3 ~ mo(water_contact3)*mo(mst_human_max_cut) + age4 + gender + education2 + ethnicity + cond_GI + 
+              other_rec_act + beach_exp_food + sand_contact + household_group +
+              (mo(water_contact3) | beach/recruit_date),
+            family = bernoulli, data = data_follow, prior = priors_rslopes,
+            iter = 2000, chains = 4, cores = 4, warmup = 1000, seed = 123, control = list(adapt_delta = 0.95),
+            backend = "cmdstanr", stan_model_args = list(stanc_options = list("O1")))
+
+summary(m6.2, robust = TRUE)
+get_variables(m6.2)
+plot(m6.2)
+pp_check(m6.2, ndraws=100)
+pp_check(m6.2, type = "stat", stat = "mean")
+
+conditional_effects(m6.2, effects = "mst_human_max_cut:water_contact3")
+conditional_effects(m6.2, effects = "water_contact3")
+
+# Same trend is noted, so use continuous version winch avoids loss of information
+
 # Compare to model with MST Human mitochondrial DNA marker
 
 m7 <- brm(agi3 ~ mo(water_contact3)*log_mst_human_mt_s + age4 + gender + education2 + ethnicity + cond_GI + 
@@ -367,7 +387,25 @@ conditional_effects(m7.1, effects = "water_contact3")
 
 loo(m7, m7.1)
 
-### Compare to model with MST Seagull marker (expected to not have any association with AGI)
+
+m7.2 <- brm(agi3 ~ mo(water_contact3)*mo(mst_human_mt_max_cut) + age4 + gender + education2 + ethnicity + cond_GI + 
+              other_rec_act + beach_exp_food + sand_contact + household_group +
+              (mo(water_contact3) | beach/recruit_date),
+            family = bernoulli, data = data_follow, prior = priors_rslopes,
+            iter = 2000, chains = 4, cores = 4, warmup = 1000, seed = 123, control = list(adapt_delta = 0.99),
+            backend = "cmdstanr", stan_model_args = list(stanc_options = list("O1")))
+
+summary(m7.2, robust = TRUE)
+get_variables(m7.2)
+plot(m7.2)
+pp_check(m7.2, ndraws=100)
+pp_check(m7.2, type = "stat", stat = "mean")
+
+conditional_effects(m7.2, effects = "mst_human_mt_max_cut:water_contact3")
+conditional_effects(m7.2, effects = "water_contact3")
+
+
+### Compare to model with MST Seagull marker 
 
 m8 <- brm(agi3 ~ mo(water_contact3)*log_mst_gull_s + age4 + gender + education2 + ethnicity + cond_GI + 
             other_rec_act + beach_exp_food + sand_contact + household_group +
@@ -418,20 +456,7 @@ m4.2_comp <- brm(agi3 ~ mo(water_contact3)*log_e_coli_max_s + age4 + gender + ed
 
 loo(m4.2_comp, m5.1)
 
-
-data_follow_mst_human <- data_follow |> 
-  drop_na(any_of(c("log_e_coli_s", "log_mst_human_s")))
-
-m4.2_mst <- brm(agi3 ~ mo(water_contact3)*log_e_coli_max_s + age4 + gender + education2 + ethnicity + cond_GI + 
-                   other_rec_act + beach_exp_food + sand_contact + household_group + 
-                  (mo(water_contact3) | beach/recruit_date),
-                 family = bernoulli, data = data_follow_mst_human, prior = priors_rslopes,
-                 iter = 2000, chains = 4, cores = 4, warmup = 1000, seed = 123, control = list(adapt_delta = 0.95),
-                 backend = "cmdstanr", stan_model_args = list(stanc_options = list("O1")))
-
-loo(m4.2_mst, m6.1, m8.1)
-
-loo(m4.2_comp, m5.1, m7.1)
+loo(m4.2, m6.1, m7.1, m8.1)
 
 
 data_follow_any <- data_follow |> 
@@ -444,7 +469,7 @@ m6.1_comp <- brm(agi3 ~ mo(water_contact3)*log_mst_human_max_s + age4 + gender +
                 iter = 2000, chains = 4, cores = 4, warmup = 1000, seed = 123, control = list(adapt_delta = 0.95),
                 backend = "cmdstanr", stan_model_args = list(stanc_options = list("O1")))
 
-loo(m4.2_comp, m5.1, m6.1_comp, m7.1)
+loo(m4.2_comp, m5.1, m6.1_comp)
 
 
 ### Negative control analysis - E. coli

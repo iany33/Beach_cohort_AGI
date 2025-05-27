@@ -226,7 +226,7 @@ ggplot(pred, aes(x = log_e_coli, y = draw)) +
        fill = "") +
   theme_classic() + 
   theme(legend.position = "bottom") +
-    facet_wrap(~ water_contact3)   -> Fig5a
+    facet_wrap(~ water_contact3)   -> Fig_ecoli
 
 # Predicted median and 95% CI values of E. coli cut-points stratified by water contact 
 
@@ -293,7 +293,7 @@ ggplot(mfx, aes(x = draw, y = contrast, fill = factor(log_e_coli_max_s))) +
 ggplot(mfx, aes(x = draw, y = factor(e_coli), fill = factor(log_e_coli_max_s))) +
   stat_halfeye(slab_alpha = .5)  +
   geom_vline(xintercept = 0, linetype = "dashed") +
-  labs(x = "E. coli Effect on AGI Incident Risk per 1000 Beachgoers at Specific Values", y = "") +
+  labs(x = "Water Contact Effect on AGI Incident Risk per 1000 Beachgoers at Specific E. coli Values", y = "") +
   theme_minimal() +
   theme(legend.position = "none") +
   scale_fill_viridis(discrete=TRUE, option = "turbo") +
@@ -456,7 +456,7 @@ data |> distinct(recruit_date, .keep_all = TRUE) |>
 
 nd <- data_follow |> 
   data_grid(water_contact3 = c("Minimal contact", "Body immersion", "Swallowed water"),
-            log_entero_max_s = seq(-1.819538, 2.69703, by = 0.2), 
+            log_entero_max_s = seq(-1.819538, 2.69703, by = 0.4), 
             age4 = c("0-4", "5-9", "10-14", "15-19", "20+"),
             gender = c("woman/girl", "man/boy", "fluid/trans"),
             ethnicity = "White", education2 = "bachelors", cond_GI = "No", other_rec_act = "Yes", 
@@ -516,92 +516,18 @@ ggplot(pred, aes(x = log_entero_max, y = draw)) +
        fill = "") +
   theme_classic() + 
   theme(legend.position = "bottom") +
-  facet_wrap(~ water_contact3)   -> Fig5b
+  facet_wrap(~ water_contact3)   -> Fig_entero
 
 
-######################################################
+
 ### Marginal effects for MST human marker mt model ###
 
-nd <- data_follow |> 
-  data_grid(water_contact3 = c("No contact", "Minimal contact", "Body immersion", "Swallowed water"),
-            log_mst_human_mt_max_s = mean(entero_max_s, na.rm=TRUE), 
-            age4 = c("0-4", "5-9", "10-14", "15-19", "20+"),
-            gender = c("woman/girl", "man/boy", "fluid/trans"),
-            ethnicity = "White", education2 = "bachelors", cond_GI = "No", other_rec_act = "Yes", 
-            beach_exp_food = "Yes", sand_contact = "No", household_group = "No") 
-
-nd <- nd |> mutate(water_contact3 = fct_relevel(water_contact3, "No contact", "Minimal contact", 
-                                                "Body immersion", "Swallowed water")) 
-
-predictions(m7.1, re_formula = NA, by = "water_contact3", type = "response", newdata = nd)
-
-pred <- predictions(m7.1, re_formula = NA, by = "water_contact3", type = "response", newdata = nd) |> posterior_draws()
-
-pred <- pred |> mutate(draw = draw*1000)
-
-ggplot(pred, aes(x = draw, y = water_contact3, fill = water_contact3)) +
-  stat_halfeye(slab_alpha = .5)  +
-  labs(x = "Predicted AGI Incident Risk per 1000 Beachgoers", y = "Level of Water Contact",
-       subtitle = "Posterior Predictions", fill = "Water contact") +
-  theme_minimal() +
-  theme(legend.position = "none") +
-  scale_fill_viridis(discrete=TRUE, option = "turbo") +
-  xlim(0, 150)
-
-# Examine marginal effects/contrast of water contact exposure effect - probability scale
-
-avg_comparisons(m7.1, re_formula = NA, variables = "water_contact3", newdata = nd)
-
-mfx <- comparisons(m7.1, re_formula = NA, variables = "water_contact3", by = "water_contact3", 
-                   newdata = nd) |> posterior_draws()
-
-mfx <- mfx |> mutate(draw = draw*1000)
-
-mfx <- mfx |> 
-  mutate(contrast = recode(contrast, "Body immersion - No contact" = "Body immersion",
-                           "Swallowed water - No contact" = "Swallowed water",
-                           "Minimal contact - No contact" = "Minimal contact")) |> 
-  mutate(contrast = fct_relevel(contrast, "Body immersion", after = 1))
-
-ggplot(mfx, aes(x = draw, y = contrast, fill = contrast)) +
-  stat_halfeye(slab_alpha = .5)  +
-  labs(x = "Water Contact Effect on AGI Incident Risk per 1000 Beachgoers", y = "") +
-  theme_minimal() +
-  theme(legend.position = "none") +
-  scale_fill_viridis(discrete=TRUE, option = "turbo") +
-  xlim(-0.5, 70) 
-
-# Odds ratio scale
-
-avg_comparisons(m7.1, re_formula = NA, variables = "water_contact3", newdata = nd,
-                comparison = "lnoravg", transform = "exp")
-
-mfx <- comparisons(m7.1, re_formula = NA, type = "link", variables = "water_contact3",   
-                   by = "water_contact3", newdata = nd) |> posterior_draws()
-
-mfx <- mfx |> 
-  mutate(contrast = recode(contrast, "Body immersion - No contact" = "Body immersion",
-                           "Swallowed water - No contact" = "Swallowed water",
-                           "Minimal contact - No contact" = "Minimal contact")) |> 
-  mutate(contrast = fct_relevel(contrast, "Body immersion", after = 1))
-
-ggplot(mfx, aes(x = exp(draw), y = contrast, fill = contrast)) +
-  stat_halfeye(slab_alpha = .5)  +
-  geom_vline(xintercept = 1, linetype = "dashed") +
-  labs(x = "Odds Ratios (vs. No Water Contact)", y="") +
-  theme_minimal() +
-  theme(legend.position = "none") +
-  scale_fill_viridis(discrete=TRUE, option = "turbo") +
-  xlim(0, 6) 
-
-# Predicted probabilities of MST relationship, conditional on water contact level
-
-quantile(data_follow$mst_human_mt_max, na.rm = TRUE)
-quantile(data_follow$log_mst_human_mt_max_s, na.rm = TRUE)
+data |> distinct(recruit_date, .keep_all = TRUE) |> 
+  summarize(log_mst_human_mt_max_s = range(log_mst_human_mt_max_s, na.rm=TRUE))
 
 nd <- data_follow |> 
   data_grid(water_contact3 = c("Minimal contact", "Body immersion", "Swallowed water"),
-            log_mst_human_mt_max_s = seq(-1.52, 1.68, by = 0.12), 
+            log_mst_human_mt_max_s = seq(-1.3562894, 1.7415812, by = 0.2), 
             age4 = c("0-4", "5-9", "10-14", "15-19", "20+"),
             gender = c("woman/girl", "man/boy", "fluid/trans"),
             ethnicity = "White", education2 = "bachelors", cond_GI = "No", other_rec_act = "Yes", 
@@ -639,13 +565,8 @@ ggplot(pred, aes(x = log_mst_human_mt, y = draw)) +
        fill = "") +
   theme_classic() + 
   theme(legend.position = "bottom") +
-  facet_wrap(~ water_contact3)   -> Fig5c
+  facet_wrap(~ water_contact3)   -> Fig_human
 
-
-Fig5b <- Fig5b + scale_y_discrete(labels = NULL)
-Fig5c <- Fig5c + scale_y_discrete(labels = NULL)
-Fig5 <- Fig5a + Fig5b + Fig5c
-Fig5 + plot_annotation(tag_levels = 'A')
 
 avg_slopes(m7.1, re_formula = NA, variables = "log_mst_human_mt_max_s", newdata = nd)
 
@@ -659,7 +580,7 @@ data |> distinct(recruit_date, .keep_all = TRUE) |>
 
 nd <- data_follow |> 
   data_grid(water_contact3 = c("Minimal contact", "Body immersion", "Swallowed water"),
-            log_mst_human_max_s = seq(-1.1744, 1.673346, by = 0.1), 
+            log_mst_human_max_s = seq(-1.179804, 1.995136, by = 0.2), 
             age4 = c("0-4", "5-9", "10-14", "15-19", "20+"),
             gender = c("woman/girl", "man/boy", "fluid/trans"),
             ethnicity = "White", education2 = "bachelors", cond_GI = "No", other_rec_act = "Yes", 
@@ -691,7 +612,7 @@ ggplot(pred, aes(x = log_mst_human, y = draw)) +
        fill = "") +
   theme_classic() + 
   theme(legend.position = "bottom") +
-  facet_wrap(~ water_contact3)   
+  facet_wrap(~ water_contact3) -> Fig_human_mt
 
 avg_slopes(m6.1, re_formula = NA, variables = "log_mst_human_max_s", newdata = nd)
 
@@ -705,7 +626,7 @@ data |> distinct(recruit_date, .keep_all = TRUE) |>
 
 nd <- data_follow |> 
   data_grid(water_contact3 = c("Minimal contact", "Body immersion", "Swallowed water"),
-            log_mst_gull_max_s = seq(-1.877628, 2.063006, by = 0.2), 
+            log_mst_gull_max_s = seq(-1.976815, 2.273201, by = 0.4), 
             age4 = c("0-4", "5-9", "10-14", "15-19", "20+"),
             gender = c("woman/girl", "man/boy", "fluid/trans"),
             ethnicity = "White", education2 = "bachelors", cond_GI = "No", other_rec_act = "Yes", 
@@ -737,12 +658,23 @@ ggplot(pred, aes(x = log_mst_gull_max, y = draw)) +
        fill = "") +
   theme_classic() + 
   theme(legend.position = "bottom") +
-  facet_wrap(~ water_contact3)  
+  facet_wrap(~ water_contact3)  -> Fig_gull
 
 avg_slopes(m8.1, re_formula = NA, variables = "log_entero_max_s", newdata = nd)
 
 avg_slopes(m8.1, re_formula = NA, variables = "log_entero_max_s", newdata = nd, by = "water_contact3")
 
+
+## Combine FIB plots together
+
+
+Fig_human <- Fig_human + theme(legend.position = "none")
+Fig_human_mt <- Fig_human_mt + theme(legend.position = "none")
+Fig_gull <- Fig_gull + theme(legend.position = "none")
+Fig_ecoli <- Fig_ecoli + theme(legend.position = "none")
+
+Fig5 <- Fig_ecoli + Fig_human + Fig_human_mt + Fig_gull + Fig_entero
+Fig5 + plot_annotation(tag_levels = 'A') + plot_layout(ncol = 2)
 
 
 ### Marginal effects for sensitivity analysis models

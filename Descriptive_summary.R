@@ -53,9 +53,29 @@ data |>
   get_summary_stats(e_coli, e_coli_max, entero_cce, entero_cce_max, 
                     mst_human, mst_human_max, mst_human_mt, mst_human_mt_max) 
 
+data |> 
+  distinct(recruit_date, .keep_all=TRUE) |> 
+  summarize(mst_human_max = quantile(mst_human_max, probs = c(0, .25, .50, .75, 1)))
 
-data |> distinct(date, mst_human_yn) |> tabyl(mst_human_yn)
-data |> distinct(date, mst_human_mt_yn) |> tabyl(mst_human_mt_yn)
+data |> 
+  distinct(recruit_date, .keep_all=TRUE) |> 
+  summarize(mst_human_mt_max = quantile(mst_human_mt_max, probs = c(0, .25, .50, .75, 1)))
+
+data <- data |> mutate(mst_human_max_cut = case_when(
+  mst_human_max == 0 ~ "0",
+  (mst_human_max > 0 & mst_human_max <=132) ~ "1-132",
+  (mst_human_max > 132 & mst_human_max <=415) ~ "133-415",
+  mst_human_max > 415 ~ ">415")) |> 
+  mutate(mst_human_max_cut = factor(mst_human_max_cut, ordered = T, 
+               levels = c("0", "1-132", "133-415", ">415")))
+    
+data <- data |> mutate(mst_human_mt_max_cut = case_when(
+  mst_human_mt_max == 0 ~ "0",
+  (mst_human_mt_max > 0 & mst_human_mt_max <=113) ~ "1-113",
+  (mst_human_mt_max > 113 & mst_human_mt_max <=245) ~ "114-245",
+  mst_human_mt_max > 245 ~ ">245"))  |> 
+  mutate(mst_human_mt_max_cut = factor(mst_human_mt_max_cut, ordered = T,
+               levels = c("0", "1-113", "114-245", ">245")))                       
 
 data |> distinct(date, mst_human_yn, site) |> 
   tabyl(mst_human_yn, site) |> 
@@ -80,10 +100,18 @@ data |> group_by(date) |> ggplot(aes(x = e_coli_max)) + geom_histogram()
 data |> group_by(date) |> ggplot(aes(x = log_e_coli_max)) + geom_histogram()
 
 data |> group_by(date) |> ggplot(aes(x = entero_cce)) + geom_histogram()
-data |> group_by(date) |> ggplot(aes(x = log_entero_cce)) + geom_histogram()
-data |> group_by(date) |> ggplot(aes(x = log_entero_cce_s)) + geom_histogram()
+data |> group_by(date) |> ggplot(aes(x = log_entero)) + geom_histogram()
+data |> group_by(date) |> ggplot(aes(x = log_entero_s)) + geom_histogram()
 data |> group_by(date) |> ggplot(aes(x = entero_cce_max)) + geom_histogram()
-data |> group_by(date) |> ggplot(aes(x = log_entero_cce_max)) + geom_histogram()
+data |> group_by(date) |> ggplot(aes(x = log_entero_max)) + geom_histogram()
+
+data |> group_by(date) |> ggplot(aes(x = mst_human_max)) + geom_histogram()
+data |> group_by(date) |> ggplot(aes(x = log_mst_human_max_s)) + geom_histogram()
+
+data |> group_by(date) |> ggplot(aes(x = mst_human_mt_max)) + geom_histogram()
+data |> group_by(date) |> ggplot(aes(x = log_mst_human_mt_max_s)) + geom_histogram()
+
+data |> group_by(date) |> ggplot(aes(x = log_mst_gull_s)) + geom_histogram()
 
 data |> group_by(date) |> ggplot(aes(x = turbidity)) + geom_histogram()
 
@@ -137,7 +165,6 @@ data |>
   theme(legend.position = "none")
 
 data |>
-  filter(site != "Toronto") |> 
   ggplot(aes(x = beach, y = log_mst_human_mt, fill = beach)) +
   geom_violin() +
   geom_boxplot(width = 0.4, color="grey", alpha = 0.2) +
@@ -215,7 +242,7 @@ data_follow |>
 
 data_follow |> 
   filter(water_contact == "Yes") |> 
-  ggplot(aes(x = agi3, y = mst_human, fill = agi3)) +
+  ggplot(aes(x = agi3, y = log_mst_human, fill = agi3)) +
   geom_violin() +
   geom_boxplot(width = 0.1) +
   theme(legend.position = "none") +
