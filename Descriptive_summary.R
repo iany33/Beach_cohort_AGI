@@ -13,6 +13,16 @@ pacman::p_load(
 # Load dataset
 
 data <- import(here("data.xlsx"))
+
+data <- data |> 
+  mutate(water_contact2 = case_when(
+    water_contact == "No" ~ "No contact",
+    water_exp_mouth == "Yes" ~ "Swallowed water",
+    water_exp_body == "Yes" ~ "Body immersion",
+    TRUE ~ "Minimal contact")) |>
+  mutate(water_contact2 = as.factor(water_contact2)) |> 
+  mutate(water_contact2 = fct_relevel(water_contact2, "No contact", "Minimal contact")) 
+
 data_follow <- data |> filter(follow == "Yes") 
 
 # Create new ordinal exposure variable
