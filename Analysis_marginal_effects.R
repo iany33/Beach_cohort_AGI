@@ -37,14 +37,14 @@ nd <- data_follow |>
             age4 = c("0-4", "5-9", "10-14", "15-19", "20+"),
             gender = c("woman/girl", "man/boy", "fluid/trans"),
             ethnicity = "White", education2 = "bachelors", cond_GI = "No", other_rec_act = "Yes", 
-            beach_exp_food = "Yes", sand_contact = "No") 
+            beach_exp_food = "Yes", sand_contact = "No", household_group = "No") 
 
 nd <- nd |> mutate(water_contact3 = fct_relevel(water_contact3, "No contact", "Minimal contact", 
                                                 "Body immersion", "Swallowed water")) 
 
-predictions(m3.1r, re_formula = NA, by = "water_contact3", type = "response", newdata = nd)
+predictions(m4.1r, re_formula = NA, by = "water_contact3", type = "response", newdata = nd)
 
-pred <- predictions(m3.1r, re_formula = NA, by = "water_contact3", type = "response", newdata = nd) |> get_draws()
+pred <- predictions(m4.1r, re_formula = NA, by = "water_contact3", type = "response", newdata = nd) |> get_draws()
 
 pred <- pred |> mutate(draw = draw*1000)
 
@@ -55,13 +55,13 @@ ggplot(pred, aes(x = draw, y = water_contact3, fill = water_contact3)) +
   theme_minimal() +
   theme(legend.position = "none") +
   scale_fill_viridis(discrete=TRUE, option = "turbo") +
-  xlim(0, 75)
+  xlim(0, 150)
 
 # Examine marginal effects/contrast of water contact exposure effect - probability scale
 
-avg_comparisons(m3.1r, re_formula = NA, variables = "water_contact3", newdata = nd)
+avg_comparisons(m4.1r, re_formula = NA, variables = "water_contact3", newdata = nd)
 
-mfx <- comparisons(m3.1r, re_formula = NA, variables = "water_contact3", by = "water_contact3", 
+mfx <- comparisons(m4.1r, re_formula = NA, variables = "water_contact3", by = "water_contact3", 
                    newdata = nd) |> posterior_draws()
 
 mfx <- mfx |> mutate(draw = draw*1000)
@@ -79,14 +79,14 @@ ggplot(mfx, aes(x = draw, y = contrast, fill = contrast)) +
   theme_minimal() +
   theme(legend.position = "none") +
   scale_fill_viridis(discrete=TRUE, option = "turbo") +
-  xlim(-10, 100) -> Fig2A
+  xlim(-10, 80) -> Fig2A
 
 # Population-averaged (marginal) adjusted risk ratios
 
-avg_comparisons(m3.1r, re_formula = NA, variables = "water_contact3", newdata = nd,
+avg_comparisons(m4.1r, re_formula = NA, variables = "water_contact3", newdata = nd,
                 comparison = "lnratioavg", transform = "exp")
 
-mfx <- comparisons(m3.1r, re_formula = NA, comparison = "lnratio", transform = "exp", 
+mfx <- comparisons(m4.1r, re_formula = NA, comparison = "lnratio", transform = "exp", 
                    variables = "water_contact3",   
                    by = "water_contact3", newdata = nd) |> posterior_draws()
 
@@ -103,7 +103,7 @@ ggplot(mfx, aes(x = draw, y = contrast, fill = contrast)) +
   theme_minimal() +
   theme(legend.position = "none") +
   scale_fill_viridis(discrete=TRUE, option = "turbo") +
-  xlim(0,7) -> Fig2B
+  xlim(0,6) -> Fig2B
 
 Fig2B <- Fig2B + scale_y_discrete(labels = NULL)
 Fig2 <- Fig2A + Fig2B
@@ -111,9 +111,9 @@ Fig2 + plot_annotation(tag_levels = 'A')
 
 # Gender specific estimates 
 
-avg_comparisons(m3.1r, re_formula = NA, variables = "water_contact3", newdata = nd, by = "gender")
+avg_comparisons(m4.1r, re_formula = NA, variables = "water_contact3", newdata = nd, by = "gender")
 
-mfx <- comparisons(m3.1r, re_formula = NA, variables = "water_contact3", by = "gender",
+mfx <- comparisons(m4.1r, re_formula = NA, variables = "water_contact3", by = "gender",
                    newdata = nd) |> posterior_draws()
 
 mfx <- mfx |> mutate(draw = draw*1000)
@@ -132,15 +132,15 @@ ggplot(mfx, aes(x = draw, y = gender, fill = gender)) +
   labs(x = "Effect of Water Contact on AGI Incident Risk per 1000 Beachgoers", y = "") +
   theme_minimal() +
   theme(legend.position = "none") +
-  xlim(-10, 75) +
+  xlim(-10, 150) +
   scale_fill_viridis(discrete=TRUE, option = "turbo") +
   facet_wrap(~ contrast)
 
 # Age specific estimates 
 
-avg_comparisons(m3.1r, re_formula = NA, variables = "water_contact3", newdata = nd, by = "age4")
+avg_comparisons(m4.1r, re_formula = NA, variables = "water_contact3", newdata = nd, by = "age4")
 
-mfx <- comparisons(m3.1r, re_formula = NA, variables = "water_contact3", by = "age4",
+mfx <- comparisons(m4.1r, re_formula = NA, variables = "water_contact3", by = "age4",
                    newdata = nd) |> posterior_draws()
 
 mfx <- mfx |> mutate(draw = draw*1000)
@@ -158,7 +158,7 @@ ggplot(mfx, aes(x = draw, y = age4, fill = age4)) +
   labs(x = "Effect of Water Contact on AGI Incident Risk per 1000 Beachgoers", y = "") +
   theme_minimal() +
   theme(legend.position = "none") +
-  xlim(-10, 70) +
+  xlim(-10, 150) +
   scale_fill_viridis(discrete=TRUE, option = "turbo") +
   facet_wrap(~ contrast)
 
@@ -170,16 +170,16 @@ data |> distinct(recruit_date, .keep_all = TRUE) |>
 
 nd <- data_follow |> 
   data_grid(water_contact3 = c("Minimal contact", "Body immersion", "Swallowed water"),
-            log_e_coli_max_s = seq(-2.232810, 2.013755, by = 0.2), 
+            log_e_coli_max_s = seq(-2.169027, 2.139532, by = 0.2), 
             age4 = c("0-4", "5-9", "10-14", "15-19", "20+"),
             gender = c("woman/girl", "man/boy", "fluid/trans"),
             ethnicity = "White", education2 = "bachelors", cond_GI = "No", other_rec_act = "Yes", 
-            beach_exp_food = "Yes", sand_contact = "No") 
+            beach_exp_food = "Yes", sand_contact = "No", household_group = "No") 
 
 nd <- nd |> mutate(water_contact3 = fct_relevel(water_contact3, "Minimal contact", 
                                                 "Body immersion", "Swallowed water")) 
 
-pred <- predictions(m3.1r, re_formula = NA, by = c("water_contact3", "log_e_coli_max_s"), 
+pred <- predictions(m4.1r, re_formula = NA, by = c("water_contact3", "log_e_coli_max_s"), 
                     type = "response", newdata = nd) |> get_draws()
 
 pred <- pred |> 
@@ -240,9 +240,9 @@ e_coli_predictions <- pred |>
 
 # Average slope
 
-avg_slopes(m3.1r, re_formula = NA, variables = "log_e_coli_max_s", newdata = nd)
+avg_slopes(m4.1r, re_formula = NA, variables = "log_e_coli_max_s", newdata = nd)
 
-avg_slopes(m3.1r, re_formula = NA, variables = "log_e_coli_max_s", newdata = nd, by = "water_contact3")
+avg_slopes(m4.1r, re_formula = NA, variables = "log_e_coli_max_s", newdata = nd, by = "water_contact3")
 
 
 ### Marginal effects of E. coli, conditional on water contact, at specific cut-points
@@ -264,12 +264,12 @@ nd <- data_follow |>
             age4 = c("0-4", "5-9", "10-14", "15-19", "20+"),
             gender = c("woman/girl", "man/boy", "fluid/trans"),
             ethnicity = "White", education2 = "bachelors", cond_GI = "No", other_rec_act = "Yes", 
-            beach_exp_food = "Yes", sand_contact = "No") 
+            beach_exp_food = "Yes", sand_contact = "No", household_group = "No") 
 
 nd <- nd |> mutate(water_contact3 = fct_relevel(water_contact3, "No contact", "Minimal contact", 
                                                 "Body immersion", "Swallowed water")) 
 
-mfx <- comparisons(m3.1r, re_formula = NA, variables = "water_contact3", by = "log_e_coli_max_s", 
+mfx <- comparisons(m4.1r, re_formula = NA, variables = "water_contact3", by = "log_e_coli_max_s", 
                    newdata = nd) |> posterior_draws()
 
 mfx <- mfx |> mutate(e_coli = exp(log_e_coli_max_s*sd(data_follow$log_e_coli_max, na.rm=TRUE) + mean(data_follow$log_e_coli_max, na.rm=TRUE))) |> 
@@ -290,7 +290,7 @@ ggplot(mfx, aes(x = draw, y = contrast, fill = factor(log_e_coli_max_s))) +
   theme(legend.position = "none") +
   scale_fill_viridis(discrete=TRUE, option = "turbo") +
   facet_wrap(~ factor(e_coli)) +
-  xlim(-15, 75)
+  xlim(-15, 150)
 
 ggplot(mfx, aes(x = draw, y = factor(e_coli), fill = factor(log_e_coli_max_s))) +
   stat_halfeye(slab_alpha = .5)  +
@@ -300,13 +300,13 @@ ggplot(mfx, aes(x = draw, y = factor(e_coli), fill = factor(log_e_coli_max_s))) 
   theme(legend.position = "none") +
   scale_fill_viridis(discrete=TRUE, option = "turbo") +
   facet_wrap(~ contrast) +
-  xlim(-15, 75)
+  xlim(-15, 150)
 
 # Average comparisons 
 
-avg_comparisons(m3.1r, re_formula = NA, variables = "water_contact3", newdata = nd, by = "log_e_coli_max_s")
+avg_comparisons(m4.1r, re_formula = NA, variables = "water_contact3", newdata = nd, by = "log_e_coli_max_s")
 
-avg_comparisons(m3.1r, re_formula = NA, variables = "water_contact3", by = "log_e_coli_max_s",
+avg_comparisons(m4.1r, re_formula = NA, variables = "water_contact3", by = "log_e_coli_max_s",
                 newdata = nd, comparison = "lnratioavg", transform = "exp")
 
 
@@ -323,7 +323,7 @@ nd <- data_follow |>
             age4 = c("0-4", "5-9", "10-14", "15-19", "20+"),
             gender = c("woman/girl", "man/boy", "fluid/trans"),
             ethnicity = "White", education2 = "bachelors", cond_GI = "No", other_rec_act = "Yes", 
-            beach_exp_food = "Yes", sand_contact = "No", 
+            beach_exp_food = "Yes", sand_contact = "No", household_group = "No",
             beach = c("English Bay Beach", "Kitsilano Beach", "Grand Beach West", "Grand Beach East",
                       "Sunnyside", "Marie Curtis", "Birch Cove Beach", "Kinsmen Beach", 
                       "Bay Beach", "Lakeside Beach")) 
@@ -331,7 +331,7 @@ nd <- data_follow |>
 nd <- nd |> mutate(water_contact3 = fct_relevel(water_contact3, "No contact", "Minimal contact", 
                                                 "Body immersion", "Swallowed water")) 
 
-pred <- predictions(m3.1r, re_formula = ~ (1 | beach), type = "response", newdata = nd) |> posterior_draws()
+pred <- predictions(m4.1r, re_formula = ~ (1 | beach), type = "response", newdata = nd) |> posterior_draws()
 
 pred <- pred |> mutate(draw = draw*1000)
 
@@ -343,12 +343,12 @@ ggplot(pred, aes(x = draw, y = beach, fill = beach)) +
   theme(legend.position = "none") +
   facet_wrap(~ water_contact3) +
   scale_fill_viridis(discrete=TRUE, option = "turbo") +
-  xlim(0, 100) 
+  xlim(0, 200) 
 
-avg_comparisons(m3.1r, re_formula = ~ (1 | beach),
+avg_comparisons(m4.1r, re_formula = ~ (1 | beach),
                 variables = "water_contact3", newdata = nd, by = "beach")
 
-mfx <- comparisons(m3.1r, re_formula = ~ (1 | beach), variables = "water_contact3", by = "beach",
+mfx <- comparisons(m4.1r, re_formula = ~ (1 | beach), variables = "water_contact3", by = "beach",
                    newdata = nd) |> posterior_draws()
 
 mfx <- mfx |> mutate(draw = draw*1000)
@@ -365,7 +365,7 @@ ggplot(mfx, aes(x = draw, y = beach, fill = beach)) +
   labs(x = "Effect of Water Contact on AGI Incident Risk per 1000 Beachgoers", y = "") +
   theme_minimal() +
   theme(legend.position = "none") +
-  xlim(-10, 50) +
+  xlim(-10, 100) +
   scale_fill_viridis(discrete=TRUE, option = "turbo") +
   facet_wrap(~ contrast)
 
@@ -385,7 +385,7 @@ nd <- data_follow |>
             age4 = c("0-4", "5-9", "10-14", "15-19", "20+"),
             gender = c("woman/girl", "man/boy", "fluid/trans"),
             ethnicity = "White", education2 = "bachelors", cond_GI = "No", other_rec_act = "Yes", 
-            beach_exp_food = "Yes", sand_contact = "No") 
+            beach_exp_food = "Yes", sand_contact = "No", household_group = "No") 
 
 nd <- nd |> mutate(water_contact3 = fct_relevel(water_contact3, "No contact", "Minimal contact", 
                                                 "Body immersion", "Swallowed water")) 
@@ -459,11 +459,11 @@ data |> distinct(recruit_date, .keep_all = TRUE) |>
 
 nd <- data_follow |> 
   data_grid(water_contact3 = c("Minimal contact", "Body immersion", "Swallowed water"),
-            log_entero_max_s = seq(-1.819538, 2.69703, by = 0.4), 
+            log_entero_max_s = seq(-1.909019, 2.676555, by = 0.4), 
             age4 = c("0-4", "5-9", "10-14", "15-19", "20+"),
             gender = c("woman/girl", "man/boy", "fluid/trans"),
             ethnicity = "White", education2 = "bachelors", cond_GI = "No", other_rec_act = "Yes", 
-            beach_exp_food = "Yes", sand_contact = "No") 
+            beach_exp_food = "Yes", sand_contact = "No", household_group = "No") 
 
 nd <- nd |> mutate(water_contact3 = fct_relevel(water_contact3, "Minimal contact", 
                                                 "Body immersion", "Swallowed water")) 
@@ -530,11 +530,11 @@ data |> distinct(recruit_date, .keep_all = TRUE) |>
 
 nd <- data_follow |> 
   data_grid(water_contact3 = c("Minimal contact", "Body immersion", "Swallowed water"),
-            log_mst_human_mt_max_s = seq(-1.3562894, 1.7415812, by = 0.2), 
+            log_mst_human_mt_max_s = seq(-1.356289, 1.741581, by = 0.2), 
             age4 = c("0-4", "5-9", "10-14", "15-19", "20+"),
             gender = c("woman/girl", "man/boy", "fluid/trans"),
             ethnicity = "White", education2 = "bachelors", cond_GI = "No", other_rec_act = "Yes", 
-            beach_exp_food = "Yes", sand_contact = "No") 
+            beach_exp_food = "Yes", sand_contact = "No", household_group = "No") 
 
 nd <- nd |> mutate(water_contact3 = fct_relevel(water_contact3, "Minimal contact", 
                                                 "Body immersion", "Swallowed water")) 
@@ -587,7 +587,7 @@ nd <- data_follow |>
             age4 = c("0-4", "5-9", "10-14", "15-19", "20+"),
             gender = c("woman/girl", "man/boy", "fluid/trans"),
             ethnicity = "White", education2 = "bachelors", cond_GI = "No", other_rec_act = "Yes", 
-            beach_exp_food = "Yes", sand_contact = "No") 
+            beach_exp_food = "Yes", sand_contact = "No", household_group = "No") 
 
 nd <- nd |> mutate(water_contact3 = fct_relevel(water_contact3, "Minimal contact", 
                                                 "Body immersion", "Swallowed water")) 
@@ -633,7 +633,7 @@ nd <- data_follow |>
             age4 = c("0-4", "5-9", "10-14", "15-19", "20+"),
             gender = c("woman/girl", "man/boy", "fluid/trans"),
             ethnicity = "White", education2 = "bachelors", cond_GI = "No", other_rec_act = "Yes", 
-            beach_exp_food = "Yes", sand_contact = "No") 
+            beach_exp_food = "Yes", sand_contact = "No", household_group = "No") 
 
 nd <- nd |> mutate(water_contact3 = fct_relevel(water_contact3, "Minimal contact", 
                                                 "Body immersion", "Swallowed water")) 
@@ -671,11 +671,11 @@ data |> distinct(recruit_date, .keep_all = TRUE) |>
 
 nd <- data_follow |> 
   data_grid(water_contact3 = c("Minimal contact", "Body immersion", "Swallowed water"),
-            log_turbidity_s = seq(-1.566311, 2.525812, by = 0.4), 
+            log_turbidity_s = seq(-1.17451, 2.93307, by = 0.4), 
             age4 = c("0-4", "5-9", "10-14", "15-19", "20+"),
             gender = c("woman/girl", "man/boy", "fluid/trans"),
             ethnicity = "White", education2 = "bachelors", cond_GI = "No", other_rec_act = "Yes", 
-            beach_exp_food = "Yes", sand_contact = "No") 
+            beach_exp_food = "Yes", sand_contact = "No", household_group = "No") 
 
 nd <- nd |> mutate(water_contact3 = fct_relevel(water_contact3, "Minimal contact", 
                                                 "Body immersion", "Swallowed water")) 
@@ -718,6 +718,7 @@ Fig_turbidity <- Fig_turbidity + theme(legend.position = "none")
 Fig5 <- Fig_ecoli + Fig_human + Fig_human_mt + Fig_gull + Fig_entero + Fig_turbidity
 Fig5 + plot_annotation(tag_levels = 'A') + plot_layout(ncol = 2)
 
+remove(Fig_ecoli, Fig_human, Fig_human_mt, Fig_gull, Fig_entero, Fig_turbidity)
 
 ### Marginal effects for sensitivity analysis models
 
@@ -731,14 +732,30 @@ list <- data |> distinct(recruit_date, .keep_all = TRUE) |>
 list <- as.list(list)
 
 nd <- data_follow |> 
-  data_grid(water_time_s = seq(-0.8516701, 10.8424324, by = 0.5),
+  data_grid(water_time_s = seq(-0.8785570, 9.5733287, by = 0.5),
             log_e_coli_max_s = list$log_e_coli_max_s, 
             age4 = c("0-4", "5-9", "10-14", "15-19", "20+"),
             gender = c("woman/girl", "man/boy", "fluid/trans"),
             ethnicity = "White", education2 = "bachelors", cond_GI = "No", other_rec_act = "Yes", 
-            beach_exp_food = "Yes", sand_contact = "No") 
+            beach_exp_food = "Yes", sand_contact = "No", household_group = "No") 
 
 avg_slopes(m_watertime, re_formula = NA, variables = "water_time_s", newdata = nd)
+
+
+pred <- predictions(m_watertime, re_formula = NA, type = "response", newdata = nd) |> posterior_draws()
+
+pred <- pred |> 
+  mutate(water_time = water_time_s*sd(data_follow$water_time, na.rm=TRUE) + mean(data_follow$water_time, na.rm=TRUE))
+
+ggplot(pred, aes(x = water_time, y = draw)) +
+  stat_lineribbon() +
+  scale_fill_brewer(palette = "Blues") +
+  labs(x = "Amount of Time in the Water (Min)",
+       y = "Predicted Probability of AGI",
+       fill = "") +
+  theme_classic() + 
+  theme(legend.position = "bottom") 
+
 
 nd <- data_follow |> 
   data_grid(water_time_s = quantile(water_time_s, probs = c(0.25, 0.50, 0.75, 0.95), na.rm = TRUE),
@@ -768,17 +785,6 @@ ggplot(pred, aes(x = log_e_coli, y = draw)) +
   facet_wrap(~ water_time)
 
 
-nd <- data_follow |> 
-  data_grid(water_time_s = seq(-0.9, 11.9, by = 0.5),
-            log_e_coli_max_s = seq(-2.35034, 1.823747, by = 0.2), 
-            age4 = c("0-4", "5-9", "10-14", "15-19", "20+"),
-            gender = c("woman/girl", "man/boy", "fluid/trans"),
-            ethnicity = "White", education2 = "bachelors", cond_GI = "No", other_rec_act = "Yes", 
-            beach_exp_food = "Yes", sand_contact = "No", household_group = "No")
-
-avg_slopes(m_watertime, re_formula = NA, variables = "log_e_coli_max_s", newdata = nd)
-
-
 # Alternative outcomes, follow-up, and prior models
 
 list <- data |> distinct(recruit_date, .keep_all = TRUE) |> 
@@ -791,7 +797,7 @@ nd <- data_follow |>
             age4 = c("0-4", "5-9", "10-14", "15-19", "20+"),
             gender = c("woman/girl", "man/boy", "fluid/trans"),
             ethnicity = "White", education2 = "bachelors", cond_GI = "No", other_rec_act = "Yes", 
-            beach_exp_food = "Yes", sand_contact = "No") 
+            beach_exp_food = "Yes", sand_contact = "No", household_group = "No") 
 
 avg_comparisons(m_diar, re_formula = NA, variables = "water_contact3", newdata = nd)
 
@@ -828,7 +834,7 @@ nd <- data_follow |>
             age4 = c("0-4", "5-9", "10-14", "15-19", "20+"),
             gender = c("woman/girl", "man/boy", "fluid/trans"),
             ethnicity = "White", education2 = "bachelors", cond_GI = "No", other_rec_act = "Yes", 
-            beach_exp_food = "Yes", sand_contact = "No") 
+            beach_exp_food = "Yes", sand_contact = "No", household_group = "No") 
 
 nd <- nd |> mutate(water_contact3 = fct_relevel(water_contact3, "Minimal contact", 
                                                 "Body immersion", "Swallowed water")) 
