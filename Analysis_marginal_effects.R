@@ -36,8 +36,9 @@ nd <- data_follow |>
             log_e_coli_max_s = list$log_e_coli_max_s, 
             age4 = c("0-4", "5-9", "10-14", "15-19", "20+"),
             gender = c("woman/girl", "man/boy", "fluid/trans"),
-            ethnicity = "White", education2 = "bachelors", cond_GI = "No", other_rec_act = "Yes", 
-            beach_exp_food = "Yes", sand_contact = "No", household_group = "No") 
+            ethnicity = "White", education2 = "bachelors", cond_GI = "No", cond_immune = "No",
+            cond_allergy = "No", other_rec_act = "Yes", beach_exp_food = "Yes", 
+            sand_contact = "No", household_group = "No") 
 
 nd <- nd |> mutate(water_contact3 = fct_relevel(water_contact3, "No contact", "Minimal contact", 
                                                 "Body immersion", "Swallowed water")) 
@@ -170,11 +171,12 @@ data |> distinct(recruit_date, .keep_all = TRUE) |>
 
 nd <- data_follow |> 
   data_grid(water_contact3 = c("Minimal contact", "Body immersion", "Swallowed water"),
-            log_e_coli_max_s = seq(-2.169027, 2.139532, by = 0.2), 
+            log_e_coli_max_s = seq(-2.185522, 2.277588, by = 0.2), 
             age4 = c("0-4", "5-9", "10-14", "15-19", "20+"),
             gender = c("woman/girl", "man/boy", "fluid/trans"),
-            ethnicity = "White", education2 = "bachelors", cond_GI = "No", other_rec_act = "Yes", 
-            beach_exp_food = "Yes", sand_contact = "No", household_group = "No") 
+            ethnicity = "White", education2 = "bachelors", cond_GI = "No", cond_immune = "No",
+            cond_allergy = "No", other_rec_act = "Yes", beach_exp_food = "Yes", 
+            sand_contact = "No", household_group = "No") 
 
 nd <- nd |> mutate(water_contact3 = fct_relevel(water_contact3, "Minimal contact", 
                                                 "Body immersion", "Swallowed water")) 
@@ -263,8 +265,9 @@ nd <- data_follow |>
             log_e_coli_max_s = list$log_e_coli_max_s, 
             age4 = c("0-4", "5-9", "10-14", "15-19", "20+"),
             gender = c("woman/girl", "man/boy", "fluid/trans"),
-            ethnicity = "White", education2 = "bachelors", cond_GI = "No", other_rec_act = "Yes", 
-            beach_exp_food = "Yes", sand_contact = "No", household_group = "No") 
+            ethnicity = "White", education2 = "bachelors", cond_GI = "No", cond_immune = "No",
+            cond_allergy = "No", other_rec_act = "Yes", beach_exp_food = "Yes", 
+            sand_contact = "No", household_group = "No") 
 
 nd <- nd |> mutate(water_contact3 = fct_relevel(water_contact3, "No contact", "Minimal contact", 
                                                 "Body immersion", "Swallowed water")) 
@@ -322,8 +325,9 @@ nd <- data_follow |>
             log_e_coli_max_s = list$log_e_coli_max_s, 
             age4 = c("0-4", "5-9", "10-14", "15-19", "20+"),
             gender = c("woman/girl", "man/boy", "fluid/trans"),
-            ethnicity = "White", education2 = "bachelors", cond_GI = "No", other_rec_act = "Yes", 
-            beach_exp_food = "Yes", sand_contact = "No", household_group = "No",
+            ethnicity = "White", education2 = "bachelors", cond_GI = "No", cond_immune = "No",
+            cond_allergy = "No", other_rec_act = "Yes", beach_exp_food = "Yes", 
+            sand_contact = "No", household_group = "No",
             beach = c("English Bay Beach", "Kitsilano Beach", "Grand Beach West", "Grand Beach East",
                       "Sunnyside", "Marie Curtis", "Birch Cove Beach", "Kinsmen Beach", 
                       "Bay Beach", "Lakeside Beach")) 
@@ -384,8 +388,9 @@ nd <- data_follow |>
             log_entero_max_s = list$log_entero_max_s, 
             age4 = c("0-4", "5-9", "10-14", "15-19", "20+"),
             gender = c("woman/girl", "man/boy", "fluid/trans"),
-            ethnicity = "White", education2 = "bachelors", cond_GI = "No", other_rec_act = "Yes", 
-            beach_exp_food = "Yes", sand_contact = "No", household_group = "No") 
+            ethnicity = "White", education2 = "bachelors", cond_GI = "No", cond_immune = "No",
+            cond_allergy = "No", other_rec_act = "Yes", beach_exp_food = "Yes", 
+            sand_contact = "No", household_group = "No") 
 
 nd <- nd |> mutate(water_contact3 = fct_relevel(water_contact3, "No contact", "Minimal contact", 
                                                 "Body immersion", "Swallowed water")) 
@@ -462,8 +467,9 @@ nd <- data_follow |>
             log_entero_max_s = seq(-1.909019, 2.676555, by = 0.4), 
             age4 = c("0-4", "5-9", "10-14", "15-19", "20+"),
             gender = c("woman/girl", "man/boy", "fluid/trans"),
-            ethnicity = "White", education2 = "bachelors", cond_GI = "No", other_rec_act = "Yes", 
-            beach_exp_food = "Yes", sand_contact = "No", household_group = "No") 
+            ethnicity = "White", education2 = "bachelors", cond_GI = "No", cond_immune = "No",
+            cond_allergy = "No", other_rec_act = "Yes", beach_exp_food = "Yes", 
+            sand_contact = "No", household_group = "No") 
 
 nd <- nd |> mutate(water_contact3 = fct_relevel(water_contact3, "Minimal contact", 
                                                 "Body immersion", "Swallowed water")) 
@@ -473,31 +479,6 @@ pred <- predictions(m5.1, re_formula = NA, type = "response", newdata = nd) |>
 
 pred <- pred |> 
   mutate(entero = exp(log_entero_max_s*sd(data_follow$log_entero_max, na.rm=TRUE) + mean(data_follow$log_entero_max, na.rm=TRUE))) 
-
-ggplot(pred, aes(x = entero, y = draw)) +
-  stat_lineribbon() +
-  scale_fill_brewer(palette = "Blues") +
-  labs(x = "Enterococci Highest Single Sample",
-       y = "Predicted Probability of AGI",
-       fill = "") +
-  theme_classic() + 
-  theme(legend.position = "bottom") 
-
-ggplot(pred, aes(x = entero, y = draw)) +
-  stat_lineribbon() +
-  scale_fill_brewer(palette = "Blues") +
-  labs(x = "Enterococci Highest Single Sample",
-       y = "Predicted Probability of AGI",
-       fill = "") +
-  theme_classic() + 
-  theme(legend.position = "bottom") +
-  facet_wrap(~ water_contact3) 
-
-avg_slopes(m5.1, re_formula = NA, variables = "log_entero_max_s", newdata = nd)
-
-avg_slopes(m5.1, re_formula = NA, variables = "log_entero_max_s", newdata = nd, by = "water_contact3")
-
-# Log scale predictions
 
 pred <- pred |> 
   mutate(log_entero_max = log_entero_max_s*sd(data_follow$log_entero_max, na.rm=TRUE) + mean(data_follow$log_entero_max, na.rm=TRUE)) 
@@ -522,6 +503,10 @@ ggplot(pred, aes(x = log_entero_max, y = draw)) +
   facet_wrap(~ water_contact3)   -> Fig_entero
 
 
+avg_slopes(m5.1, re_formula = NA, variables = "log_entero_max_s", newdata = nd)
+
+avg_slopes(m5.1, re_formula = NA, variables = "log_entero_max_s", newdata = nd, by = "water_contact3")
+
 
 ### Marginal effects for MST human marker mt model ###
 
@@ -533,8 +518,9 @@ nd <- data_follow |>
             log_mst_human_mt_max_s = seq(-1.356289, 1.741581, by = 0.2), 
             age4 = c("0-4", "5-9", "10-14", "15-19", "20+"),
             gender = c("woman/girl", "man/boy", "fluid/trans"),
-            ethnicity = "White", education2 = "bachelors", cond_GI = "No", other_rec_act = "Yes", 
-            beach_exp_food = "Yes", sand_contact = "No", household_group = "No") 
+            ethnicity = "White", education2 = "bachelors", cond_GI = "No", cond_immune = "No",
+            cond_allergy = "No", other_rec_act = "Yes", beach_exp_food = "Yes", 
+            sand_contact = "No", household_group = "No") 
 
 nd <- nd |> mutate(water_contact3 = fct_relevel(water_contact3, "Minimal contact", 
                                                 "Body immersion", "Swallowed water")) 
@@ -544,18 +530,6 @@ pred <- predictions(m7.1, re_formula = NA, type = "response", newdata = nd) |>
 
 pred <- pred |> 
   mutate(mst_human_mt = exp(log_mst_human_mt_max_s*sd(data_follow$log_mst_human_mt_max, na.rm=TRUE) + mean(data_follow$log_mst_human_mt_max, na.rm=TRUE))) 
-
-ggplot(pred, aes(x = mst_human_mt, y = draw)) +
-  stat_lineribbon() +
-  scale_fill_brewer(palette = "Blues") +
-  labs(x = "Human Mitochondrial DNA Highest Single Sample",
-       y = "Predicted Probability of AGI",
-       fill = "") +
-  theme_classic() + 
-  theme(legend.position = "bottom") +
-  facet_wrap(~ water_contact3)  
-
-# Log scale predictions
 
 pred <- pred |> 
   mutate(log_mst_human_mt = log_mst_human_mt_max_s*sd(data_follow$log_mst_human_mt_max, na.rm=TRUE) + mean(data_follow$log_mst_human_mt_max, na.rm=TRUE)) 
@@ -586,8 +560,9 @@ nd <- data_follow |>
             log_mst_human_max_s = seq(-1.179804, 1.995136, by = 0.2), 
             age4 = c("0-4", "5-9", "10-14", "15-19", "20+"),
             gender = c("woman/girl", "man/boy", "fluid/trans"),
-            ethnicity = "White", education2 = "bachelors", cond_GI = "No", other_rec_act = "Yes", 
-            beach_exp_food = "Yes", sand_contact = "No", household_group = "No") 
+            ethnicity = "White", education2 = "bachelors", cond_GI = "No", cond_immune = "No",
+            cond_allergy = "No", other_rec_act = "Yes", beach_exp_food = "Yes", 
+            sand_contact = "No", household_group = "No") 
 
 nd <- nd |> mutate(water_contact3 = fct_relevel(water_contact3, "Minimal contact", 
                                                 "Body immersion", "Swallowed water")) 
@@ -632,8 +607,9 @@ nd <- data_follow |>
             log_mst_gull_max_s = seq(-1.976815, 2.273201, by = 0.4), 
             age4 = c("0-4", "5-9", "10-14", "15-19", "20+"),
             gender = c("woman/girl", "man/boy", "fluid/trans"),
-            ethnicity = "White", education2 = "bachelors", cond_GI = "No", other_rec_act = "Yes", 
-            beach_exp_food = "Yes", sand_contact = "No", household_group = "No") 
+            ethnicity = "White", education2 = "bachelors", cond_GI = "No", cond_immune = "No",
+            cond_allergy = "No", other_rec_act = "Yes", beach_exp_food = "Yes", 
+            sand_contact = "No", household_group = "No") 
 
 nd <- nd |> mutate(water_contact3 = fct_relevel(water_contact3, "Minimal contact", 
                                                 "Body immersion", "Swallowed water")) 
@@ -671,11 +647,12 @@ data |> distinct(recruit_date, .keep_all = TRUE) |>
 
 nd <- data_follow |> 
   data_grid(water_contact3 = c("Minimal contact", "Body immersion", "Swallowed water"),
-            log_turbidity_s = seq(-1.17451, 2.93307, by = 0.4), 
+            log_turbidity_s = seq(-1.159473, 2.962535, by = 0.4), 
             age4 = c("0-4", "5-9", "10-14", "15-19", "20+"),
             gender = c("woman/girl", "man/boy", "fluid/trans"),
-            ethnicity = "White", education2 = "bachelors", cond_GI = "No", other_rec_act = "Yes", 
-            beach_exp_food = "Yes", sand_contact = "No", household_group = "No") 
+            ethnicity = "White", education2 = "bachelors", cond_GI = "No", cond_immune = "No",
+            cond_allergy = "No", other_rec_act = "Yes", beach_exp_food = "Yes", 
+            sand_contact = "No", household_group = "No") 
 
 nd <- nd |> mutate(water_contact3 = fct_relevel(water_contact3, "Minimal contact", 
                                                 "Body immersion", "Swallowed water")) 
@@ -736,8 +713,9 @@ nd <- data_follow |>
             log_e_coli_max_s = list$log_e_coli_max_s, 
             age4 = c("0-4", "5-9", "10-14", "15-19", "20+"),
             gender = c("woman/girl", "man/boy", "fluid/trans"),
-            ethnicity = "White", education2 = "bachelors", cond_GI = "No", other_rec_act = "Yes", 
-            beach_exp_food = "Yes", sand_contact = "No", household_group = "No") 
+            ethnicity = "White", education2 = "bachelors", cond_GI = "No", cond_immune = "No",
+            cond_allergy = "No", other_rec_act = "Yes", beach_exp_food = "Yes", 
+            sand_contact = "No", household_group = "No") 
 
 avg_slopes(m_watertime, re_formula = NA, variables = "water_time_s", newdata = nd)
 
@@ -796,8 +774,9 @@ nd <- data_follow |>
             log_e_coli_max_s = list$log_e_coli_max_s, 
             age4 = c("0-4", "5-9", "10-14", "15-19", "20+"),
             gender = c("woman/girl", "man/boy", "fluid/trans"),
-            ethnicity = "White", education2 = "bachelors", cond_GI = "No", other_rec_act = "Yes", 
-            beach_exp_food = "Yes", sand_contact = "No", household_group = "No") 
+            ethnicity = "White", education2 = "bachelors", cond_GI = "No", cond_immune = "No",
+            cond_allergy = "No", other_rec_act = "Yes", beach_exp_food = "Yes", 
+            sand_contact = "No", household_group = "No") 
 
 avg_comparisons(m_diar, re_formula = NA, variables = "water_contact3", newdata = nd)
 
@@ -833,8 +812,9 @@ nd <- data_follow |>
             log_e_coli_max_s = seq(-2.232810, 2.013755, by = 0.2), 
             age4 = c("0-4", "5-9", "10-14", "15-19", "20+"),
             gender = c("woman/girl", "man/boy", "fluid/trans"),
-            ethnicity = "White", education2 = "bachelors", cond_GI = "No", other_rec_act = "Yes", 
-            beach_exp_food = "Yes", sand_contact = "No", household_group = "No") 
+            ethnicity = "White", education2 = "bachelors", cond_GI = "No", cond_immune = "No",
+            cond_allergy = "No", other_rec_act = "Yes", beach_exp_food = "Yes", 
+            sand_contact = "No", household_group = "No") 
 
 nd <- nd |> mutate(water_contact3 = fct_relevel(water_contact3, "Minimal contact", 
                                                 "Body immersion", "Swallowed water")) 

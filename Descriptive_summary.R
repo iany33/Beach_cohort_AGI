@@ -34,7 +34,7 @@ data_follow <- data_follow |>
 # Descriptive tables
 
 data |> 
-  select(age4, gender, education2, ethnicity, follow) |> 
+  select(age4, gender, education2, ethnicity, water_contact2, follow) |> 
   tbl_summary(by = follow, digits = list(all_categorical() ~ c(0, 1))) |> 
   add_overall() |>
   as_flex_table() 
@@ -53,6 +53,19 @@ data_follow |> group_by(house_id) |>
     n == 1 ~ 1, n == 2 ~ 2, n == 3 ~ 3,
     n == 4 ~ 4, n == 5 ~ 5, n == 6 ~ 6)) |> 
   tabyl(house_size)
+
+data_follow |> filter(agi3 == "Yes") |> 
+  group_by(water_contact3, agi3) |> get_summary_stats(symp_inc) 
+data_follow |> filter(agi3 == "Yes") |> 
+  group_by(agi3) |> get_summary_stats(symp_inc) 
+
+data_follow |>
+  filter(agi3 == "Yes") |> 
+  select(water_contact3, misswork, misswork_days, med_antibiotics, med_otc, med_none, healthcare1,
+         blood_stool1, stool_test1, emergency, hospital) |> 
+  tbl_summary(by = water_contact3, digits = list(all_categorical() ~ c(0, 1))) |> 
+  add_overall() |>
+  as_flex_table() 
 
 # FIB summary stats
 
@@ -349,6 +362,20 @@ data_follow |>
   labs(x = "Time in the water (min)",
        y = "E. coli Geometric Mean")
 
+# Export dataset for GitHub
 
+data_open <- data |> select(house_id, participant_id, date, recruit_date, consent_opendata, beach, site,
+               e_coli, e_coli_max, entero_cce, entero_cce_max, mst_human, mst_human_max, mst_human_mt, 
+               mst_human_mt_max, mst_gull, mst_gull_max, turbidity, log_e_coli, log_e_coli_s, 
+               log_e_coli_max, log_e_coli_max_s, log_entero, log_entero_s,log_entero_max, log_entero_max_s,
+               log_mst_human, log_mst_human_s, log_mst_human_max, log_mst_human_max_s,  
+               log_mst_human_mt, log_mst_human_mt_s, log_mst_human_mt_max, log_mst_human_mt_max_s, 
+               log_mst_gull, log_mst_gull_s, log_mst_gull_max, log_mst_gull_max_s, log_turbidity,
+               log_turbidity_s, water_contact2, water_time, age4, gender, education2, 
+               ethnicity, cond_GI, other_rec_act, beach_exp_food, sand_contact, household_group, 
+               diarrhea3, agi_3day, agi_5day)
+data_open[data_open$consent_opendata == 0, ] <- NA
 
+data_open |> export(here("Datasets", "data_open.xlsx"))
 
+            
