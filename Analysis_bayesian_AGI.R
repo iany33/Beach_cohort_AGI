@@ -138,7 +138,7 @@ m4 <- brm(agi3 ~ 0 + Intercept + mo(water_contact3)*log_e_coli_s + age4 + gender
             cond_immune + cond_allergy + other_rec_act + beach_exp_food + sand_contact + household_group +
             (1 | site/beach/recruit_date),
           family = bernoulli, data = data_follow, prior = priors2,
-          iter = 2000, chains = 4, cores = 4, warmup = 1000, seed = 123, control = list(adapt_delta = 0.95),
+          iter = 2000, chains = 4, cores = 4, warmup = 1000, seed = 123, control = list(adapt_delta = 0.97),
           backend = "cmdstanr", stan_model_args = list(stanc_options = list("O1")))
 
 summary(m4, robust = TRUE)
@@ -172,7 +172,7 @@ m4.1 <- brm(agi3 ~ 0 + Intercept + mo(water_contact3)*log_e_coli_max_s + age4 + 
               cond_immune + cond_allergy + other_rec_act + beach_exp_food + sand_contact + household_group +
               (1 | site/beach/recruit_date),
             family = bernoulli, data = data_follow, prior = priors2,
-            iter = 2000, chains = 4, cores = 4, warmup = 1000, seed = 123, control = list(adapt_delta = 0.95),
+            iter = 2000, chains = 4, cores = 4, warmup = 1000, seed = 123, control = list(adapt_delta = 0.99),
             backend = "cmdstanr", stan_model_args = list(stanc_options = list("O1")))
 
 summary(m4.1, robust = TRUE)
@@ -182,7 +182,8 @@ pp_check(m4.1, ndraws=100)
 pp_check(m4.1, type = "stat", stat = "mean")
 
 conditional_effects(m4.1, effects = "log_e_coli_max_s:water_contact3")
-conditional_effects(m4.1, effects = "water_contact3")
+conditional_effects(m4.1, effects = "water_contact3") -> fit
+fit$water_contact3
 
 # Examine PAV-adjusted calibration plot diagnostic
 
@@ -206,7 +207,7 @@ m4.1r <- brm(agi3 ~ 0 + Intercept + mo(water_contact3)*log_e_coli_max_s + age4 +
                cond_immune + cond_allergy + other_rec_act + beach_exp_food + sand_contact + household_group +
                (mo(water_contact3) | site/beach/recruit_date),
              family = bernoulli, data = data_follow, prior = priors_rslopes,
-             iter = 2000, chains = 4, cores = 4, warmup = 1000, seed = 123, control = list(adapt_delta = 0.95),
+             iter = 2000, chains = 4, cores = 4, warmup = 1000, seed = 123, control = list(adapt_delta = 0.97),
              backend = "cmdstanr", stan_model_args = list(stanc_options = list("O1")))
 
 summary(m4.1r, robust = TRUE)
@@ -240,7 +241,7 @@ m4r <- brm(agi3 ~ 0 + Intercept + mo(water_contact3)*log_e_coli_s + age4 + gende
              cond_immune + cond_allergy + other_rec_act + beach_exp_food + sand_contact + household_group + 
              (mo(water_contact3) | site/beach/recruit_date),
           family = bernoulli, data = data_follow, prior = priors_rslopes,
-          iter = 2000, chains = 4, cores = 4, warmup = 1000, seed = 123, control = list(adapt_delta = 0.95),
+          iter = 2000, chains = 4, cores = 4, warmup = 1000, seed = 123, control = list(adapt_delta = 0.97),
           backend = "cmdstanr", stan_model_args = list(stanc_options = list("O1")))
 
 summary(m4r, robust = TRUE)
@@ -278,7 +279,7 @@ m5.1 <- brm(agi3 ~ 0 + Intercept + mo(water_contact3)*log_entero_max_s + age4 + 
               cond_immune + cond_allergy + other_rec_act + beach_exp_food + sand_contact + household_group +
               (mo(water_contact3) | site/beach/recruit_date),
           family = bernoulli, data = data_follow, prior = priors_rslopes,
-          iter = 2000, chains = 4, cores = 4, warmup = 1000, seed = 123, control = list(adapt_delta = 0.95),
+          iter = 2000, chains = 4, cores = 4, warmup = 1000, seed = 123, control = list(adapt_delta = 0.97),
           backend = "cmdstanr", stan_model_args = list(stanc_options = list("O1")))
 
 summary(m5.1, robust = TRUE)
@@ -484,7 +485,7 @@ m9 <- brm(agi3 ~ 0 + Intercept + mo(water_contact3)*log_turbidity_s + age4 + gen
             cond_immune + cond_allergy + other_rec_act + beach_exp_food + sand_contact + household_group +
             (mo(water_contact3) | site/beach/recruit_date), 
             family = bernoulli, data = data_follow, prior = priors_rslopes,
-            iter = 2000, chains = 4, cores = 4, warmup = 1000, seed = 123, control = list(adapt_delta = 0.9),
+            iter = 2000, chains = 4, cores = 4, warmup = 1000, seed = 123, control = list(adapt_delta = 0.99),
             backend = "cmdstanr", stan_model_args = list(stanc_options = list("O1")))
 
 summary(m9, robust = TRUE)
@@ -545,7 +546,7 @@ m.nc <- brm(agi3 ~ 0 + Intercept + log_e_coli_max_s + age4 + gender + education2
               cond_immune + cond_allergy + other_rec_act + beach_exp_food + sand_contact + household_group +
               (1 | site/beach/recruit_date),
           family = bernoulli, data = data_neg_control, prior = priors_nc,
-          iter = 2000, chains = 4, cores = 4, warmup = 1000, seed = 123, control = list(adapt_delta = 0.95),
+          iter = 2000, chains = 4, cores = 4, warmup = 1000, seed = 123, control = list(adapt_delta = 0.99),
           backend = "cmdstanr", stan_model_args = list(stanc_options = list("O1")))
 
 summary(m.nc, robust = TRUE)
@@ -575,9 +576,9 @@ priors3 <- c(set_prior("normal(0,1)",class= "b"),
 
 m_watertime <- brm(agi3 ~ 0 + Intercept + water_time_s*log_e_coli_max_s + age4 + gender + education2 + ethnicity + cond_GI + 
                      cond_immune + cond_allergy + other_rec_act + beach_exp_food + sand_contact + household_group +
-              (mo(water_time_s) | site/beach/recruit_date),
+              (water_time_s | site/beach/recruit_date),
             family = bernoulli, data = data_follow, prior = priors3,
-            iter = 2000, chains = 4, cores = 4, warmup = 1000, seed = 123, control = list(adapt_delta = 0.95),
+            iter = 2000, chains = 4, cores = 4, warmup = 1000, seed = 123, control = list(adapt_delta = 0.99),
             backend = "cmdstanr", stan_model_args = list(stanc_options = list("O1")))
 
 summary(m_watertime, robust = TRUE)
@@ -595,7 +596,7 @@ m_diar <- brm(diarrhea3 ~ 0 + Intercept + mo(water_contact3)*log_e_coli_max_s + 
                 cond_immune + cond_allergy + other_rec_act + beach_exp_food + sand_contact + household_group +
                 (mo(water_contact3) | site/beach/recruit_date),
             family = bernoulli, data = data_follow, prior = priors_rslopes,
-            iter = 2000, chains = 4, cores = 4, warmup = 1000, seed = 123, control = list(adapt_delta = 0.95),
+            iter = 2000, chains = 4, cores = 4, warmup = 1000, seed = 123, control = list(adapt_delta = 0.99),
             backend = "cmdstanr", stan_model_args = list(stanc_options = list("O1")))
 
 summary(m_diar, robust = TRUE)
@@ -613,7 +614,7 @@ m_3day <- brm(agi_3day ~ 0 + Intercept + mo(water_contact3)*log_e_coli_max_s + a
                 cond_immune + cond_allergy + other_rec_act + beach_exp_food + sand_contact + household_group +
                 (mo(water_contact3) | site/beach/recruit_date),
                 family = bernoulli, data = data_follow, prior = priors_rslopes,
-                iter = 2000, chains = 4, cores = 4, warmup = 1000, seed = 123, control = list(adapt_delta = 0.95),
+                iter = 2000, chains = 4, cores = 4, warmup = 1000, seed = 123, control = list(adapt_delta = 0.99),
                 backend = "cmdstanr", stan_model_args = list(stanc_options = list("O1")))
 
 summary(m_3day, robust = TRUE)
@@ -632,7 +633,7 @@ m_5day <- brm(agi_5day ~ 0 + Intercept + mo(water_contact3)*log_e_coli_max_s + a
                 cond_immune + cond_allergy + other_rec_act + beach_exp_food + sand_contact + household_group +
                 (mo(water_contact3) | site/beach/recruit_date),
               family = bernoulli, data = data_follow, prior = priors_rslopes,
-              iter = 2000, chains = 4, cores = 4, warmup = 1000, seed = 123, control = list(adapt_delta = 0.95),
+              iter = 2000, chains = 4, cores = 4, warmup = 1000, seed = 123, control = list(adapt_delta = 0.99),
               backend = "cmdstanr", stan_model_args = list(stanc_options = list("O1")))
 
 summary(m_5day, robust = TRUE)
@@ -643,30 +644,6 @@ pp_check(m_5day, type = "stat", stat = "mean")
 
 conditional_effects(m_5day, effects = "log_e_coli_max_s:water_contact3")
 conditional_effects(m_5day, effects = "water_contact3")
-
-
-# Stronger priors: normal(0,0.5)
-
-priors_strong <- c(set_prior("normal(0,0.5)", class = "b"),
-                   set_prior("exponential(1)", class = "sd"),
-                   set_prior("dirichlet(c(1, 3, 6))", class = "simo", coef = "mowater_contact31"),
-                   set_prior("lkj(2)", class = "cor"))
-
-m_strong <- brm(agi3 ~ 0 + Intercept + mo(water_contact3)*log_e_coli_max_s + age4 + gender + education2 + ethnicity + cond_GI + 
-                  cond_immune + cond_allergy + other_rec_act + beach_exp_food + sand_contact + household_group +
-                  (mo(water_contact3) | site/beach/recruit_date),
-              family = bernoulli, data = data_follow, prior = priors_strong,
-              iter = 2000, chains = 4, cores = 4, warmup = 1000, seed = 123, control = list(adapt_delta = 0.99),
-              backend = "cmdstanr", stan_model_args = list(stanc_options = list("O1")))
-
-summary(m_strong, robust = TRUE)
-get_variables(m_strong)
-plot(m_strong)
-pp_check(m_strong, ndraws=100)
-pp_check(m_strong, type = "stat", stat = "mean")
-
-conditional_effects(m_strong, effects = "log_e_coli_max_s:water_contact3")
-conditional_effects(m_strong, effects = "water_contact3")
 
 # Weaker priors: normal(0,2)
 
@@ -679,7 +656,7 @@ m_weak <- brm(agi3 ~ 0 + Intercept + mo(water_contact3)*log_e_coli_max_s + age4 
                 cond_immune + cond_allergy + other_rec_act + beach_exp_food + sand_contact + household_group +
                 (mo(water_contact3) | site/beach/recruit_date),
                 family = bernoulli, data = data_follow, prior = priors_weak,
-                iter = 2000, chains = 4, cores = 4, warmup = 1000, seed = 123, control = list(adapt_delta = 0.95),
+                iter = 2000, chains = 4, cores = 4, warmup = 1000, seed = 123, control = list(adapt_delta = 0.99),
                 backend = "cmdstanr", stan_model_args = list(stanc_options = list("O1")))
 
 summary(m_weak, robust = TRUE)

@@ -74,7 +74,7 @@ old <- options(pillar.sigfig = 5)
 data |> 
   distinct(recruit_date, .keep_all=TRUE) |> 
   get_summary_stats(e_coli, e_coli_max, entero_cce, entero_cce_max, 
-                    mst_human, mst_human_max, mst_human_mt, mst_human_mt_max) 
+                    mst_human, mst_human_max, mst_human_mt, mst_human_mt_max, turbidity) 
 
 data |> 
   distinct(recruit_date, .keep_all=TRUE) |> 
@@ -100,6 +100,20 @@ data <- data |> mutate(mst_human_mt_max_cut = case_when(
   mutate(mst_human_mt_max_cut = factor(mst_human_mt_max_cut, ordered = T,
                levels = c("0", "1-113", "114-245", ">245")))                       
 
+data |> distinct(date, e_coli_max, site) |> 
+  mutate(e_coli_max = if_else(e_coli_max > 0, 1, 0)) |> 
+  tabyl(e_coli_max, site) |> 
+  adorn_percentages("col") |> 
+  adorn_totals("row") |> 
+  adorn_ns() 
+
+data |> distinct(date, entero_cce_max, site) |> 
+  mutate(entero_cce_max = if_else(entero_cce_max > 0, 1, 0)) |> 
+  tabyl(entero_cce_max, site) |> 
+  adorn_percentages("col") |> 
+  adorn_totals("row") |> 
+  adorn_ns() 
+
 data |> distinct(date, mst_human_yn, site) |> 
   tabyl(mst_human_yn, site) |> 
   adorn_percentages("col") |> 
@@ -114,6 +128,13 @@ data |> distinct(date, mst_human_mt_yn, site) |>
 
 data |> distinct(date, mst_goose_yn, site) |> 
   tabyl(mst_goose_yn, site) |> 
+  adorn_percentages("col") |> 
+  adorn_totals("row") |> 
+  adorn_ns() 
+
+data |> distinct(date, turbidity, site) |> 
+  mutate(turbidity_yn = if_else(turbidity > 0, 1, 0)) |> 
+  tabyl(turbidity_yn, site) |> 
   adorn_percentages("col") |> 
   adorn_totals("row") |> 
   adorn_ns() 
@@ -372,8 +393,8 @@ data_open <- data |> select(house_id, participant_id, date, recruit_date, consen
                log_mst_human_mt, log_mst_human_mt_s, log_mst_human_mt_max, log_mst_human_mt_max_s, 
                log_mst_gull, log_mst_gull_s, log_mst_gull_max, log_mst_gull_max_s, log_turbidity,
                log_turbidity_s, water_contact2, water_time, age4, gender, education2, 
-               ethnicity, cond_GI, other_rec_act, beach_exp_food, sand_contact, household_group, 
-               diarrhea3, agi_3day, agi_5day)
+               ethnicity, cond_GI, cond_immune, cond_allergy, other_rec_act, beach_exp_food, 
+               sand_contact, household_group, diarrhea3, agi_3day, agi_5day)
 data_open[data_open$consent_opendata == 0, ] <- NA
 
 data_open |> export(here("Datasets", "data_open.xlsx"))
