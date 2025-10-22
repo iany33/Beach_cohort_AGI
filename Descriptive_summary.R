@@ -76,6 +76,9 @@ data |>
   get_summary_stats(e_coli, e_coli_max, entero_cce, entero_cce_max, 
                     mst_human, mst_human_max, mst_human_mt, mst_human_mt_max, turbidity) 
 
+data |> distinct(recruit_date, .keep_all=TRUE) |> tabyl(ecoli_thresholds)
+data |> distinct(recruit_date, .keep_all=TRUE) |> tabyl(ecoli_bav)
+
 data |> 
   distinct(recruit_date, .keep_all=TRUE) |> 
   summarize(mst_human_max = quantile(mst_human_max, probs = c(0, .25, .50, .75, 1)))
