@@ -82,6 +82,11 @@ ggplot(mfx, aes(x = draw, y = contrast, fill = contrast)) +
   scale_fill_viridis(discrete=TRUE, option = "turbo") +
   xlim(-15, 70) -> Fig2A
 
+# Check proportion of posterior that is greater than 0
+
+mfx |> group_by(contrast) |> 
+  summarize(proportion = mean(draw > 0))
+
 # Population-averaged (marginal) adjusted risk ratios
 
 avg_comparisons(m4.1r, re_formula = NA, variables = "water_contact3", newdata = nd,
