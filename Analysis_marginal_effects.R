@@ -38,7 +38,7 @@ nd <- data_follow |>
             gender = c("woman/girl", "man/boy", "fluid/trans"),
             ethnicity = "White", education2 = "bachelors", cond_GI = "No", cond_immune = "No",
             cond_allergy = "No", other_rec_act = "Yes", beach_exp_food = "Yes", 
-            sand_contact = "No", household_group = "No") 
+            sand_contact = "No", household_group = "Yes") 
 
 nd <- nd |> mutate(water_contact3 = fct_relevel(water_contact3, "No contact", "Minimal contact", 
                                                 "Body immersion", "Swallowed water")) 
@@ -85,7 +85,8 @@ ggplot(mfx, aes(x = draw, y = contrast, fill = contrast)) +
 # Check proportion of posterior that is greater than 0
 
 mfx |> group_by(contrast) |> 
-  summarize(proportion = mean(draw > 0))
+  summarize(proportion_0 = mean(draw > 0),
+            proportion_10 = mean(draw > 10))
 
 # Population-averaged (marginal) adjusted risk ratios
 
@@ -183,7 +184,7 @@ nd <- data_follow |>
             gender = c("woman/girl", "man/boy", "fluid/trans"),
             ethnicity = "White", education2 = "bachelors", cond_GI = "No", cond_immune = "No",
             cond_allergy = "No", other_rec_act = "Yes", beach_exp_food = "Yes", 
-            sand_contact = "No", household_group = "No") 
+            sand_contact = "No", household_group = "Yes") 
 
 nd <- nd |> mutate(water_contact3 = fct_relevel(water_contact3, "Minimal contact", 
                                                 "Body immersion", "Swallowed water")) 
@@ -274,7 +275,7 @@ nd <- data_follow |>
             gender = c("woman/girl", "man/boy", "fluid/trans"),
             ethnicity = "White", education2 = "bachelors", cond_GI = "No", cond_immune = "No",
             cond_allergy = "No", other_rec_act = "Yes", beach_exp_food = "Yes", 
-            sand_contact = "No", household_group = "No") 
+            sand_contact = "No", household_group = "Yes") 
 
 nd <- nd |> mutate(water_contact3 = fct_relevel(water_contact3, "No contact", "Minimal contact", 
                                                 "Body immersion", "Swallowed water")) 
@@ -334,7 +335,7 @@ nd <- data_follow |>
             gender = c("woman/girl", "man/boy", "fluid/trans"),
             ethnicity = "White", education2 = "bachelors", cond_GI = "No", cond_immune = "No",
             cond_allergy = "No", other_rec_act = "Yes", beach_exp_food = "Yes", 
-            sand_contact = "No", household_group = "No",
+            sand_contact = "No", household_group = "Yes",
             site = data_follow$site) 
 
 nd <- nd |> mutate(water_contact3 = fct_relevel(water_contact3, "No contact", "Minimal contact", 
@@ -396,7 +397,7 @@ nd <- data_follow |>
             gender = c("woman/girl", "man/boy", "fluid/trans"),
             ethnicity = "White", education2 = "bachelors", cond_GI = "No", cond_immune = "No",
             cond_allergy = "No", other_rec_act = "Yes", beach_exp_food = "Yes", 
-            sand_contact = "No", household_group = "No") 
+            sand_contact = "No", household_group = "Yes") 
 
 nd <- nd |> mutate(water_contact3 = fct_relevel(water_contact3, "No contact", "Minimal contact", 
                                                 "Body immersion", "Swallowed water")) 
@@ -475,7 +476,7 @@ nd <- data_follow |>
             gender = c("woman/girl", "man/boy", "fluid/trans"),
             ethnicity = "White", education2 = "bachelors", cond_GI = "No", cond_immune = "No",
             cond_allergy = "No", other_rec_act = "Yes", beach_exp_food = "Yes", 
-            sand_contact = "No", household_group = "No") 
+            sand_contact = "No", household_group = "Yes") 
 
 nd <- nd |> mutate(water_contact3 = fct_relevel(water_contact3, "Minimal contact", 
                                                 "Body immersion", "Swallowed water")) 
@@ -526,7 +527,7 @@ nd <- data_follow |>
             gender = c("woman/girl", "man/boy", "fluid/trans"),
             ethnicity = "White", education2 = "bachelors", cond_GI = "No", cond_immune = "No",
             cond_allergy = "No", other_rec_act = "Yes", beach_exp_food = "Yes", 
-            sand_contact = "No", household_group = "No") 
+            sand_contact = "No", household_group = "Yes") 
 
 nd <- nd |> mutate(water_contact3 = fct_relevel(water_contact3, "Minimal contact", 
                                                 "Body immersion", "Swallowed water")) 
@@ -568,7 +569,7 @@ nd <- data_follow |>
             gender = c("woman/girl", "man/boy", "fluid/trans"),
             ethnicity = "White", education2 = "bachelors", cond_GI = "No", cond_immune = "No",
             cond_allergy = "No", other_rec_act = "Yes", beach_exp_food = "Yes", 
-            sand_contact = "No", household_group = "No") 
+            sand_contact = "No", household_group = "Yes") 
 
 nd <- nd |> mutate(water_contact3 = fct_relevel(water_contact3, "Minimal contact", 
                                                 "Body immersion", "Swallowed water")) 
@@ -616,7 +617,7 @@ nd <- data_follow |>
             gender = c("woman/girl", "man/boy", "fluid/trans"),
             ethnicity = "White", education2 = "bachelors", cond_GI = "No", cond_immune = "No",
             cond_allergy = "No", other_rec_act = "Yes", beach_exp_food = "Yes", 
-            sand_contact = "No", household_group = "No") 
+            sand_contact = "No", household_group = "Yes") 
 
 nd <- nd |> mutate(water_contact3 = fct_relevel(water_contact3, "Minimal contact", 
                                                 "Body immersion", "Swallowed water")) 
@@ -668,7 +669,7 @@ nd <- data_follow |>
             gender = c("woman/girl", "man/boy", "fluid/trans"),
             ethnicity = "White", education2 = "bachelors", cond_GI = "No", cond_immune = "No",
             cond_allergy = "No", other_rec_act = "Yes", beach_exp_food = "Yes", 
-            sand_contact = "No", household_group = "No") 
+            sand_contact = "No", household_group = "Yes") 
 
 nd <- nd |> mutate(water_contact3 = fct_relevel(water_contact3, "No contact", "Minimal contact", 
                                                 "Body immersion", "Swallowed water")) 
@@ -688,7 +689,7 @@ nd <- data_follow |>
             gender = c("woman/girl", "man/boy", "fluid/trans"),
             ethnicity = "White", education2 = "bachelors", cond_GI = "No", cond_immune = "No",
             cond_allergy = "No", other_rec_act = "Yes", beach_exp_food = "Yes", 
-            sand_contact = "No", household_group = "No") 
+            sand_contact = "No", household_group = "Yes") 
 
 nd <- nd |> mutate(water_contact3 = fct_relevel(water_contact3, "Minimal contact", 
                                                 "Body immersion", "Swallowed water")) 
@@ -757,7 +758,7 @@ nd <- data_follow |>
             gender = c("woman/girl", "man/boy", "fluid/trans"),
             ethnicity = "White", education2 = "bachelors", cond_GI = "No", cond_immune = "No",
             cond_allergy = "No", other_rec_act = "Yes", beach_exp_food = "Yes", 
-            sand_contact = "No", household_group = "No") 
+            sand_contact = "No", household_group = "Yes") 
 
 avg_comparisons(m_watertime, re_formula = NA, variables = list(water_time_s = "iqr"), newdata = nd)
 
@@ -787,7 +788,7 @@ nd <- data_follow |>
             gender = c("woman/girl", "man/boy", "fluid/trans"),
             ethnicity = "White", education2 = "bachelors", cond_GI = "No", cond_immune = "No",
             cond_allergy = "No", other_rec_act = "Yes", beach_exp_food = "Yes", 
-            sand_contact = "No", household_group = "No") 
+            sand_contact = "No", household_group = "Yes") 
 
 avg_slopes(m_watertime, re_formula = NA, variables = "log_e_coli_max_s", newdata = nd, by = "water_time_s")
 
@@ -822,7 +823,7 @@ nd <- data_follow |>
             gender = c("woman/girl", "man/boy", "fluid/trans"),
             ethnicity = "White", education2 = "bachelors", cond_GI = "No", cond_immune = "No",
             cond_allergy = "No", other_rec_act = "Yes", beach_exp_food = "Yes", 
-            sand_contact = "No", household_group = "No") 
+            sand_contact = "No", household_group = "Yes") 
 
 avg_comparisons(m_diar, re_formula = NA, variables = "water_contact3", newdata = nd)
 
@@ -855,7 +856,7 @@ nd <- data_follow |>
             gender = c("woman/girl", "man/boy", "fluid/trans"),
             ethnicity = "White", education2 = "bachelors", cond_GI = "No", cond_immune = "No",
             cond_allergy = "No", other_rec_act = "Yes", beach_exp_food = "Yes", 
-            sand_contact = "No", household_group = "No") 
+            sand_contact = "No", household_group = "Yes") 
 
 nd <- nd |> mutate(water_contact3 = fct_relevel(water_contact3, "Minimal contact", 
                                                 "Body immersion", "Swallowed water")) 
@@ -950,7 +951,7 @@ nd <- data_follow |>
             gender = c("woman/girl", "man/boy", "fluid/trans"),
             ethnicity = "White", education2 = "bachelors", cond_GI = "No", cond_immune = "No",
             cond_allergy = "No", other_rec_act = "Yes", beach_exp_food = "Yes", 
-            sand_contact = "No", household_group = "No") 
+            sand_contact = "No", household_group = "Yes") 
 
 pred <- predictions(m.nc, re_formula = NA, type = "response", newdata = nd) |> posterior_draws()
 
