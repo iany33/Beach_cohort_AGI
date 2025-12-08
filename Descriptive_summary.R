@@ -10,7 +10,7 @@ pacman::p_load(
   viridis
 )
 
-# Load dataset
+# Load dataset and relevel variables
 
 data <- import(here("data.xlsx"))
 
@@ -22,6 +22,12 @@ data <- data |>
     TRUE ~ "Minimal contact")) |>
   mutate(water_contact2 = as.factor(water_contact2)) |> 
   mutate(water_contact2 = fct_relevel(water_contact2, "No contact", "Minimal contact")) 
+
+data <- data |> 
+    mutate(education2 = fct_relevel(education2, "high school or less")) |> 
+    mutate(gender = fct_relevel(gender, "fluid/trans", after = 2)) |> 
+    mutate(ethnicity = fct_relevel(ethnicity, "White")) |> 
+    mutate(age4 = fct_relevel(age4, "5-9", after = 1))
 
 data_follow <- data |> filter(follow == "Yes") 
 
@@ -386,20 +392,6 @@ data_follow |>
   labs(x = "Time in the water (min)",
        y = "E. coli Geometric Mean")
 
-# Export dataset for GitHub
 
-data_open <- data |> select(house_id, participant_id, date, recruit_date, consent_opendata, beach, site,
-               e_coli, e_coli_max, entero_cce, entero_cce_max, mst_human, mst_human_max, mst_human_mt, 
-               mst_human_mt_max, mst_gull, mst_gull_max, turbidity, log_e_coli, log_e_coli_s, 
-               log_e_coli_max, log_e_coli_max_s, log_entero, log_entero_s,log_entero_max, log_entero_max_s,
-               log_mst_human, log_mst_human_s, log_mst_human_max, log_mst_human_max_s,  
-               log_mst_human_mt, log_mst_human_mt_s, log_mst_human_mt_max, log_mst_human_mt_max_s, 
-               log_mst_gull, log_mst_gull_s, log_mst_gull_max, log_mst_gull_max_s, log_turbidity,
-               log_turbidity_s, water_contact2, water_time, age4, gender, education2, 
-               ethnicity, cond_GI, cond_immune, cond_allergy, other_rec_act, beach_exp_food, 
-               sand_contact, household_group, diarrhea3, agi_3day, agi_5day)
-data_open[data_open$consent_opendata == 0, ] <- NA
-
-data_open |> export(here("Datasets", "data_open.xlsx"))
 
             

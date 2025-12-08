@@ -10,7 +10,9 @@ pacman::p_load(
   tidybayes, 
   bayesplot,
   marginaleffects,
-  cmdstanr
+  cmdstanr,
+  rstan,
+  performance
 )
 
 # Start with AGI outcome, first build model with no confounders then add confounders
@@ -215,6 +217,8 @@ pp_check(m4.1r, ndraws=100)
 pp_check(m4.1r, type = "stat", stat = "mean")
 stancode(m4.1r)
 
+plot(m4.1r, nvariables=1)
+
 conditional_effects(m4.1r, effects = "log_e_coli_max_s:water_contact3")
 conditional_effects(m4.1r, effects = "water_contact3") -> fit
 fit$water_contact3
@@ -231,6 +235,8 @@ ppc_calibration_pava(y, 0.95, yrep[1:100,])
 
 loo(m4.1, m4.1r)
 
+variance_decomposition(m4.1r)
+
 # Despite loo comparison not showing much difference, random slope model shows slightly more conservative predictions
 # Use random-slope approach to avoid over estimating/predicting main effects
 
@@ -240,7 +246,7 @@ m4r <- brm(agi3 ~ 0 + Intercept + mo(water_contact3)*log_e_coli_s + age4 + gende
              cond_immune + cond_allergy + other_rec_act + beach_exp_food + sand_contact + household_group + 
              (mo(water_contact3) | site/beach/recruit_date),
           family = bernoulli, data = data_follow, prior = priors_rslopes,
-          iter = 2000, chains = 4, cores = 4, warmup = 1000, seed = 1007783, control = list(adapt_delta = 0.97),
+          iter = 2000, chains = 4, cores = 4, warmup = 1000, seed = 1007783, control = list(adapt_delta = 0.99),
           backend = "cmdstanr", stan_model_args = list(stanc_options = list("O1")))
 
 summary(m4r, robust = TRUE)
@@ -564,6 +570,7 @@ conditional_effects(m.nc, effects = "log_e_coli_max_s")
 # Alternative exposure: time spent in water (min), mean centered and standardized
 
 data_follow <- data_follow |> 
+  mutate(water_time = replace_na(water_time, 0)) |> 
   mutate(water_time_s = (water_time - mean(water_time, na.rm = TRUE)) / sd(water_time, na.rm = TRUE))
 
 data_follow |> group_by(date) |> ggplot(aes(x = water_time)) + geom_histogram()
@@ -669,6 +676,115 @@ conditional_effects(m_weak, effects = "water_contact3")
 
 
 
+# Check model with interaction for gender
+
+m.gender <- brm(agi3 ~ 0 + Intercept + mo(water_contact3)*log_e_coli_max_s + age4 + mo(water_contact3)*gender + education2 + ethnicity + cond_GI + 
+               cond_immune + cond_allergy + other_rec_act + beach_exp_food + sand_contact + household_group +
+               (mo(water_contact3) | site/beach/recruit_date),
+             family = bernoulli, data = data_follow, prior = priors_rslopes,
+             iter = 2000, chains = 4, cores = 4, warmup = 1000, seed = 2656855, control = list(adapt_delta = 0.99),
+             backend = "cmdstanr", stan_model_args = list(stanc_options = list("O1")))
+
+summary(m.gender, robust = TRUE)
+get_variables(m.gender)
+plot(m.gender)
+pp_check(m.gender, ndraws=100)
+pp_check(m.gender, type = "stat", stat = "mean")
+
+conditional_effects(m.gender, effects = "log_e_coli_max_s:water_contact3")
+conditional_effects(m.gender, effects = "water_contact3") 
+conditional_effects(m.gender, effects = "water_contact3:gender") 
+
+# Examine PAV-adjusted calibration plot diagnostic
+
+y <- data_follow |> mutate(agi4 = if_else(agi3=="No", 0, 1)) |> 
+  drop_na(any_of(c("log_e_coli_max_s", "age4", "gender", "education2", "ethnicity", "cond_GI", 
+                   "other_rec_act", "beach_exp_food", "sand_contact")))
+y <- y$agi4
+yrep <- posterior_predict(m.gender, draws = 500)
+ppc_calibration_pava(y, 0.95, yrep[1:100,])
+
+loo(m.gender, m4.1r)
+
+# Does not fit as well as non-interaction model
+
+# Check model with interaction for age
+
+data_follow <- data_follow |> 
+  mutate(age_group = case_when(
+    age4 == "0-4" ~ "Infant",
+    age4 == "5-9" ~ "Child",
+    age4 == "10-14" ~ "Adolescent",
+    age4 == "15-19" ~ "Teenager",
+    age4 == "20+" ~ "Adult",
+    TRUE ~ NA)) |> 
+  mutate(age_group = as.factor(age_group)) |> 
+  mutate(age_group = fct_relevel(age_group, "Infant", "Child", "Adolescent", "Teenager", "Adult"))
+
+m.age <- brm(agi3 ~ 0 + Intercept + mo(water_contact3)*log_e_coli_max_s + mo(water_contact3)*age_group + gender + education2 + ethnicity + cond_GI + 
+                  cond_immune + cond_allergy + other_rec_act + beach_exp_food + sand_contact + household_group +
+                  (mo(water_contact3) | site/beach/recruit_date),
+                family = bernoulli, data = data_follow, prior = priors_rslopes,
+                iter = 2000, chains = 4, cores = 4, warmup = 1000, seed = 107693, control = list(adapt_delta = 0.99),
+                backend = "cmdstanr", stan_model_args = list(stanc_options = list("O1")))
 
 
+summary(m.age, robust = TRUE)
+get_variables(m.age)
+plot(m.age)
+pp_check(m.age, ndraws=100)
+pp_check(m.age, type = "stat", stat = "mean")
+
+conditional_effects(m.age, effects = "log_e_coli_max_s:water_contact3")
+conditional_effects(m.age, effects = "water_contact3") 
+conditional_effects(m.age, effects = "water_contact3:age_group") 
+
+# Examine PAV-adjusted calibration plot diagnostic
+
+y <- data_follow |> mutate(agi4 = if_else(agi3=="No", 0, 1)) |> 
+  drop_na(any_of(c("log_e_coli_max_s", "age4", "gender", "education2", "ethnicity", "cond_GI", 
+                   "other_rec_act", "beach_exp_food", "sand_contact")))
+y <- y$agi4
+yrep <- posterior_predict(m.age, draws = 500)
+ppc_calibration_pava(y, 0.95, yrep[1:100,])
+
+loo(m.age, m4.1r)
+
+# Does not fit as well as non-interaction model
+
+
+## Check model with one random participant per household to examine impact of household clustering
+
+data_house <- data_follow |> group_by(house_id, agi3) |> 
+  slice_sample(n=1)
+
+data_house |> tabyl(agi3)
+
+m4.1r.house <- brm(agi3 ~ 0 + Intercept + mo(water_contact3)*log_e_coli_max_s + age4 + gender + education2 + ethnicity + cond_GI + 
+               cond_immune + cond_allergy + other_rec_act + beach_exp_food + sand_contact +
+               (mo(water_contact3) | site/beach/recruit_date),
+             family = bernoulli, data = data_house, prior = priors_rslopes,
+             iter = 2000, chains = 4, cores = 4, warmup = 1000, seed = 7101467, control = list(adapt_delta = 0.99),
+             backend = "cmdstanr", stan_model_args = list(stanc_options = list("O1")))
+
+summary(m4.1r.house, robust = TRUE)
+get_variables(m4.1r.house)
+plot(m4.1r.house)
+pp_check(m4.1r.house, ndraws=100)
+pp_check(m4.1r.house, type = "stat", stat = "mean")
+stancode(m4.1r.house)
+
+conditional_effects(m4.1r.house, effects = "log_e_coli_max_s:water_contact3")
+conditional_effects(m4.1r.house, effects = "water_contact3") -> fit
+fit$water_contact3
+
+
+# Examine PAV-adjusted calibration plot diagnostic
+
+y <- data_house |> mutate(agi4 = if_else(agi3=="No", 0, 1)) |> 
+  drop_na(any_of(c("log_e_coli_max_s", "age4", "gender", "education2", "ethnicity", "cond_GI", 
+                   "other_rec_act", "beach_exp_food", "sand_contact")))
+y <- y$agi4
+yrep <- posterior_predict(m4.1r.house, draws = 500)
+ppc_calibration_pava(y, 0.95, yrep[1:100,])
 

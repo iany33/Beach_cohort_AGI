@@ -13,6 +13,7 @@ pacman::p_load(
   cmdstanr,
   modelr,
   patchwork,
+  rstan,
   viridis
 )
 
@@ -82,11 +83,14 @@ ggplot(mfx, aes(x = draw, y = contrast, fill = contrast)) +
   scale_fill_viridis(discrete=TRUE, option = "turbo") +
   xlim(-15, 70) -> Fig2A
 
-# Check proportion of posterior that is greater than 0
+# Check proportion of posterior that is greater than 0 and other values
 
 mfx |> group_by(contrast) |> 
   summarize(proportion_0 = mean(draw > 0),
-            proportion_10 = mean(draw > 10))
+            proportion_1 = mean(draw > 1),
+            proportion_5 = mean(draw > 5),
+            proportion_10 = mean(draw > 10),
+            proportion_20 = mean(draw > 20))
 
 # Population-averaged (marginal) adjusted risk ratios
 
@@ -240,6 +244,7 @@ ggplot(pred, aes(x = log_e_coli, y = draw)) +
   theme(legend.position = "bottom") +
     facet_wrap(~ water_contact3)   -> Fig_ecoli
 
+
 # Predicted median and 95% CI values of E. coli cut-points stratified by water contact 
 
 e_coli_predictions <- pred |> 
@@ -253,6 +258,8 @@ e_coli_predictions <- pred |>
 avg_comparisons(m4.1r, re_formula = NA, variables = list(log_e_coli_max_s = "iqr"), newdata = nd)
 
 avg_comparisons(m4.1r, re_formula = NA, variables = list(log_e_coli_max_s = "iqr"), newdata = nd, by = "water_contact3")
+
+hypothesis(m4.1r, "log_e_coli_max_s > 0")
 
 
 ### Marginal effects of E. coli, conditional on water contact, at specific cut-points
@@ -321,6 +328,15 @@ avg_comparisons(m4.1r, re_formula = NA, variables = "water_contact3", by = "log_
                 newdata = nd, comparison = "lnratioavg", transform = "exp")
 
 
+# Check proportion of posterior that is greater than 0 and other values
+
+mfx |> group_by(contrast, log_e_coli_max_s) |> 
+  summarize(proportion_0 = mean(draw > 0),
+            proportion_1 = mean(draw > 1),
+            proportion_5 = mean(draw > 5),
+            proportion_10 = mean(draw > 10),
+            proportion_20 = mean(draw > 20))
+
 
 ### Site-specific posterior probabilities and contrasts
 
@@ -379,6 +395,52 @@ ggplot(mfx, aes(x = draw, y = site, fill = site)) +
   xlim(-10, 100) +
   scale_fill_viridis(discrete=TRUE, option = "turbo") +
   facet_wrap(~ contrast)
+
+
+
+data |> distinct(recruit_date, .keep_all = TRUE) |> 
+  summarize(log_e_coli_max_s = range(log_e_coli_max_s, na.rm=TRUE))
+
+nd <- data_follow |> 
+  data_grid(water_contact3 = c("Minimal contact", "Body immersion", "Swallowed water"),
+            log_e_coli_max_s = seq(-2.186539, 2.281874, by = 0.2), 
+            age4 = c("0-4", "5-9", "10-14", "15-19", "20+"),
+            gender = c("woman/girl", "man/boy", "fluid/trans"),
+            ethnicity = "White", education2 = "bachelors", cond_GI = "No", cond_immune = "No",
+            cond_allergy = "No", other_rec_act = "Yes", beach_exp_food = "Yes", 
+            sand_contact = "No", household_group = "Yes", site = data_follow$site) 
+
+nd <- nd |> mutate(water_contact3 = fct_relevel(water_contact3, "Minimal contact", 
+                                                "Body immersion", "Swallowed water")) 
+
+pred <- predictions(m4.1r, re_formula = ~ (1 | site), by = c("water_contact3", "log_e_coli_max_s", "site"), 
+                    type = "response", newdata = nd) |> get_draws()
+
+pred <- pred |> 
+  mutate(e_coli = exp(log_e_coli_max_s*sd(data_follow$log_e_coli_max, na.rm=TRUE) + mean(data_follow$log_e_coli_max, na.rm=TRUE))) 
+
+pred <- pred |> 
+  mutate(log_e_coli = log_e_coli_max_s*sd(data_follow$log_e_coli_max, na.rm=TRUE) + mean(data_follow$log_e_coli_max, na.rm=TRUE)) 
+
+ggplot(pred, aes(x = log_e_coli, y = draw)) +
+  stat_lineribbon() +
+  scale_fill_brewer(palette = "Blues") +
+  labs(x = "Log E. coli Highest Single Sample",
+       y = "Predicted Probability of AGI",
+       fill = "") +
+  theme_classic() + 
+  theme(legend.position = "bottom")
+
+ggplot(pred, aes(x = log_e_coli, y = draw)) +
+  stat_lineribbon() +
+  scale_fill_brewer(palette = "Blues") +
+  labs(x = "Log E. coli Highest Single Sample",
+       y = "Predicted Probability of AGI",
+       fill = "") +
+  theme_classic() + 
+  theme(legend.position = "bottom") +
+  facet_wrap(~ site + water_contact3, ncol =3)
+
 
 
 ### Marginal effects for qPCR enterococci model ###
@@ -762,6 +824,8 @@ nd <- data_follow |>
 
 avg_comparisons(m_watertime, re_formula = NA, variables = list(water_time_s = "iqr"), newdata = nd)
 
+avg_comparisons(m_watertime, re_formula = NA, variables = list(log_e_coli_max_s = "iqr"), newdata = nd)
+
 
 pred <- predictions(m_watertime, re_formula = NA, type = "response", newdata = nd) |> get_draws()
 
@@ -871,7 +935,7 @@ avg_comparisons(m_3day, re_formula = NA, variables = list(log_e_coli_max_s = "iq
 
 avg_comparisons(m_5day, re_formula = NA, variables = list(log_e_coli_max_s = "iqr"), newdata = nd)
 
-avg_comparisons(m_5day, re_formula = NA, variables = list(log_e_coli_max_s = "iqr"), by = "water_contact3")
+avg_comparisons(m_5day, re_formula = NA, variables = list(log_e_coli_max_s = "iqr"), newdata = nd, by = "water_contact3")
 
 avg_comparisons(m_weak, re_formula = NA, variables = list(log_e_coli_max_s = "iqr"), newdata = nd)
 
@@ -966,4 +1030,105 @@ ggplot(pred, aes(x = log_e_coli, y = draw)) +
        fill = "") +
   theme_classic() + 
   theme(legend.position = "bottom")
+
+
+
+
+# One person per household model
+
+data |> distinct(recruit_date, .keep_all = TRUE) |> 
+  summarize(log_e_coli_max_s = mean(log_e_coli_max_s, na.rm=TRUE))
+
+list <- data |> distinct(recruit_date, .keep_all = TRUE) |> 
+  summarize(log_e_coli_max_s = mean(log_e_coli_max_s, na.rm=TRUE))
+list <- as.list(list)
+
+exp(list$log_e_coli_max_s*sd(data_follow$log_e_coli_max, na.rm=TRUE) + mean(data_follow$log_e_coli_max, na.rm=TRUE))
+
+nd <- data_follow |> 
+  data_grid(water_contact3 = c("No contact", "Minimal contact", "Body immersion", "Swallowed water"),
+            log_e_coli_max_s = list$log_e_coli_max_s, 
+            age4 = c("0-4", "5-9", "10-14", "15-19", "20+"),
+            gender = c("woman/girl", "man/boy", "fluid/trans"),
+            ethnicity = "White", education2 = "bachelors", cond_GI = "No", cond_immune = "No",
+            cond_allergy = "No", other_rec_act = "Yes", beach_exp_food = "Yes", 
+            sand_contact = "No") 
+
+nd <- nd |> mutate(water_contact3 = fct_relevel(water_contact3, "No contact", "Minimal contact", 
+                                                "Body immersion", "Swallowed water")) 
+
+predictions(m4.1r.house, re_formula = NA, by = "water_contact3", type = "response", newdata = nd)
+
+pred <- predictions(m4.1r.house, re_formula = NA, by = "water_contact3", type = "response", newdata = nd) |> get_draws()
+
+pred <- pred |> mutate(draw = draw*1000)
+
+ggplot(pred, aes(x = draw, y = water_contact3, fill = water_contact3)) +
+  stat_halfeye(slab_alpha = .5)  +
+  labs(x = "Predicted AGI Incident Risk per 1000 Beachgoers", y = "Level of Water Contact",
+       subtitle = "Posterior Predictions", fill = "Water contact") +
+  theme_minimal() +
+  theme(legend.position = "none") +
+  scale_fill_viridis(discrete=TRUE, option = "turbo") +
+  xlim(0, 150) 
+
+# Examine marginal effects/contrast of water contact exposure effect - probability scale
+
+avg_comparisons(m4.1r.house, re_formula = NA, variables = "water_contact3", newdata = nd)
+
+mfx <- comparisons(m4.1r.house,, re_formula = NA, variables = "water_contact3", by = "water_contact3", 
+                   newdata = nd) |> posterior_draws()
+
+mfx <- mfx |> mutate(draw = draw*1000)
+
+mfx <- mfx |> 
+  mutate(contrast = recode(contrast, "Body immersion - No contact" = "Body immersion",
+                           "Swallowed water - No contact" = "Swallowed water",
+                           "Minimal contact - No contact" = "Minimal contact")) |> 
+  mutate(contrast = fct_relevel(contrast, "Body immersion", after = 1)) 
+
+ggplot(mfx, aes(x = draw, y = contrast, fill = contrast)) +
+  stat_halfeye(slab_alpha = .5)  +
+  geom_vline(xintercept = 0, linetype = "dashed") +
+  labs(x = "Water Contact Effect on AGI Incident Risk per 1000 Beachgoers", y = "") +
+  theme_minimal() +
+  theme(legend.position = "none") +
+  scale_fill_viridis(discrete=TRUE, option = "turbo") +
+  xlim(-15, 70) 
+
+
+avg_comparisons(m4.1r.house, re_formula = NA, variables = "water_contact3", newdata = nd,
+                comparison = "lnratioavg", transform = "exp")
+
+
+nd <- data_follow |> 
+  data_grid(water_contact3 = c("Minimal contact", "Body immersion", "Swallowed water"),
+            log_e_coli_max_s = seq(-2.186539, 2.281874, by = 0.2), 
+            age4 = c("0-4", "5-9", "10-14", "15-19", "20+"),
+            gender = c("woman/girl", "man/boy", "fluid/trans"),
+            ethnicity = "White", education2 = "bachelors", cond_GI = "No", cond_immune = "No",
+            cond_allergy = "No", other_rec_act = "Yes", beach_exp_food = "Yes", 
+            sand_contact = "No") 
+
+nd <- nd |> mutate(water_contact3 = fct_relevel(water_contact3, "Minimal contact", 
+                                                "Body immersion", "Swallowed water")) 
+
+pred <- predictions(m4.1r.house, re_formula = NA, type = "response", newdata = nd) |> posterior_draws()
+
+pred <- pred |> 
+  mutate(log_e_coli = log_e_coli_max_s*sd(data_follow$log_e_coli_max, na.rm=TRUE) + mean(data_follow$log_e_coli_max, na.rm=TRUE)) 
+
+ggplot(pred, aes(x = log_e_coli, y = draw)) +
+  stat_lineribbon() +
+  scale_fill_brewer(palette = "Blues") +
+  labs(x = "Log E. coli Highest Single Sample",
+       y = "Predicted Probability of AGI",
+       fill = "") +
+  theme_classic() + 
+  theme(legend.position = "bottom") +
+  facet_wrap(~ water_contact3)
+
+avg_comparisons(m4.1r.house, re_formula = NA, variables = list(log_e_coli_max_s = "iqr"), newdata = nd)
+
+avg_comparisons(m4.1r.house, re_formula = NA, variables = list(log_e_coli_max_s = "iqr"), newdata = nd, by = "water_contact3")
 
