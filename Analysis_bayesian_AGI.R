@@ -26,7 +26,7 @@ get_prior(agi3 ~ 0 + Intercept + water_contact2 + (1 | beach/recruit_date/house_
 priors <- c(set_prior("normal(0.3, 0.6)", class = "b", coef = "water_contact2Minimalcontact"),
             set_prior("normal(0.5, 0.5)", class = "b", coef = "water_contact2Bodyimmersion"),
             set_prior("normal(0.7, 0.4)", class = "b", coef = "water_contact2Swallowedwater"),
-            set_prior("normal(0, 1)", class = "b", coef = "Intercept"),
+            set_prior("normal(0, 1.5)", class = "b", coef = "Intercept"),
             set_prior("exponential(1)", class = "sd"))
 
 m1 <- brm(agi3 ~ 0 + Intercept + water_contact2 + (1 | beach/recruit_date/house_id),
@@ -41,6 +41,7 @@ pp_check(m1, ndraws=100)
 pp_check(m1, type = "stat", stat = "mean")
 mcmc_acf(m1, pars = vars(contains("b_")), lags = 10)
 mcmc_pairs(m1, pars = vars(contains("b_")), diag_fun = "den", off_diag_fun = "hex")
+conditional_effects(m1)
 
 # Check if treating exposure as monotonic variable fits better than as indicator variable
 
@@ -61,7 +62,7 @@ dirichlet |>
 
 # Set priors and run model
 
-priors2 <- c(set_prior("normal(0,1)",class= "b"),
+priors2 <- c(set_prior("normal(0,1.5)",class= "b"),
              set_prior("exponential(1)", class = "sd"),
              set_prior("dirichlet(c(1, 2, 3))", class = "simo", coef = "mowater_contact31"))
 
@@ -78,6 +79,7 @@ pp_check(m1.2, type = "stat", stat = "mean")
 mcmc_acf(m1, pars = vars(contains("b_")), lags = 10)
 mcmc_pairs(m1.2, pars = vars(contains("b_")), diag_fun = "den", off_diag_fun = "hex")
 conditional_effects(m1.2)
+
 
 # Monotonic version fits better
 
@@ -107,7 +109,7 @@ m3 <- brm(agi3 ~ 0 + Intercept + mo(water_contact3)*log_e_coli_s + age4 + gender
             cond_immune + cond_allergy + other_rec_act + beach_exp_food + sand_contact + 
             (1 | beach/recruit_date/house_id),
           family = bernoulli, data = data_follow, prior = priors2,
-          iter = 2000, chains = 4, cores = 4, warmup = 1000, seed = 7002009, control = list(adapt_delta = 0.95),
+          iter = 2000, chains = 4, cores = 4, warmup = 1000, seed = 7002009, control = list(adapt_delta = 0.99),
           backend = "cmdstanr", stan_model_args = list(stanc_options = list("O1")))
 
 summary(m3, robust = TRUE)
@@ -132,6 +134,9 @@ y <- y$agi4
 yrep <- posterior_predict(m3, draws = 500)
 ppc_calibration_pava(y, 0.95, yrep[1:100,])
 
+# Using the PAV-adjusted calibration plots, the model with household clustering is mis-specified
+# Model with household clustering is over-confident in predicting high prob cases and under-confident for low prob cases
+
 # Re-run model without the household cluster and instead include indicator for household size >1
 # Also add another random effect for site 
 
@@ -139,7 +144,7 @@ m4 <- brm(agi3 ~ 0 + Intercept + mo(water_contact3)*log_e_coli_s + age4 + gender
             cond_immune + cond_allergy + other_rec_act + beach_exp_food + sand_contact + household_group +
             (1 | site/beach/recruit_date),
           family = bernoulli, data = data_follow, prior = priors2,
-          iter = 2000, chains = 4, cores = 4, warmup = 1000, seed = 3260924, control = list(adapt_delta = 0.97),
+          iter = 2000, chains = 4, cores = 4, warmup = 1000, seed = 6492620, control = list(adapt_delta = 0.99),
           backend = "cmdstanr", stan_model_args = list(stanc_options = list("O1")))
 
 summary(m4, robust = TRUE)
@@ -161,9 +166,6 @@ y <- y$agi4
 yrep <- posterior_predict(m4, draws = 500)
 ppc_calibration_pava(y, 0.95, yrep[1:100,])
 
-
-# Using the PAV-adjusted calibration plots, the model with household clustering is mis-specified
-# Model with household clustering is over-confident in predicting high prob cases and under-confident for low prob cases
 # Moving forward will use household group instead of house id clustering; with additional site effect
 
 # Compare to model with highest single sample E. coli 
@@ -181,6 +183,8 @@ plot(m4.1)
 pp_check(m4.1, ndraws=100)
 pp_check(m4.1, type = "stat", stat = "mean")
 
+plot(m4.1, nvariables=1)
+
 conditional_effects(m4.1, effects = "log_e_coli_max_s:water_contact3")
 conditional_effects(m4.1, effects = "water_contact3") -> fit
 fit$water_contact3
@@ -196,9 +200,9 @@ ppc_calibration_pava(y, 0.95, yrep[1:100,])
 
 loo(m4, m4.1)
 
-# Compare to model with random slopes for water contact, given cross-level interaction term
+# Compare to model with random slopes for water contact
 
-priors_rslopes <- c(set_prior("normal(0,1)", class = "b"),
+priors_rslopes <- c(set_prior("normal(0,1.5)", class = "b"),
                     set_prior("exponential(1)", class = "sd"),
                     set_prior("dirichlet(c(1, 2, 3))", class = "simo", coef = "mowater_contact31"),
                     set_prior("lkj(2)", class = "cor"))
@@ -237,36 +241,15 @@ loo(m4.1, m4.1r)
 
 variance_decomposition(m4.1r)
 
-# Despite loo comparison not showing much difference, random slope model shows slightly more conservative predictions
-# Use random-slope approach to avoid over estimating/predicting main effects
-
-# Compare again to mean E. coli model with random slopes
-
-m4r <- brm(agi3 ~ 0 + Intercept + mo(water_contact3)*log_e_coli_s + age4 + gender + education2 + ethnicity + cond_GI + 
-             cond_immune + cond_allergy + other_rec_act + beach_exp_food + sand_contact + household_group + 
-             (mo(water_contact3) | site/beach/recruit_date),
-          family = bernoulli, data = data_follow, prior = priors_rslopes,
-          iter = 2000, chains = 4, cores = 4, warmup = 1000, seed = 1007783, control = list(adapt_delta = 0.99),
-          backend = "cmdstanr", stan_model_args = list(stanc_options = list("O1")))
-
-summary(m4r, robust = TRUE)
-get_variables(m4r)
-plot(m4r)
-pp_check(m4r, ndraws=100)
-pp_check(m4r, type = "stat", stat = "mean")
-
-conditional_effects(m4r, effects = "log_e_coli_s:water_contact3")
-conditional_effects(m4r, effects = "water_contact3") 
-
-loo(m4r, m4.1r)
+# LOO shows preference for more parsimonious model without random slopes
 
 # Compare to model with qPCR enterococci instead of E. coli
 
 m5 <- brm(agi3 ~ 0 + Intercept + mo(water_contact3)*log_entero_s + age4 + gender + education2 + ethnicity + cond_GI + 
             cond_immune + cond_allergy + other_rec_act + beach_exp_food + sand_contact + household_group +
-            (mo(water_contact3) | site/beach/recruit_date),
-          family = bernoulli, data = data_follow, prior = priors_rslopes,
-          iter = 2000, chains = 4, cores = 4, warmup = 1000, seed = 8303611, control = list(adapt_delta = 0.95),
+            (1 | site/beach/recruit_date),
+          family = bernoulli, data = data_follow, prior = priors2,
+          iter = 2000, chains = 4, cores = 4, warmup = 1000, seed = 8303611, control = list(adapt_delta = 0.99),
           backend = "cmdstanr", stan_model_args = list(stanc_options = list("O1")))
 
 summary(m5, robust = TRUE)
@@ -282,9 +265,9 @@ conditional_effects(m5, effects = "water_contact3")
 
 m5.1 <- brm(agi3 ~ 0 + Intercept + mo(water_contact3)*log_entero_max_s + age4 + gender + education2 + ethnicity + cond_GI + 
               cond_immune + cond_allergy + other_rec_act + beach_exp_food + sand_contact + household_group +
-              (mo(water_contact3) | site/beach/recruit_date),
-          family = bernoulli, data = data_follow, prior = priors_rslopes,
-          iter = 2000, chains = 4, cores = 4, warmup = 1000, seed = 9748160, control = list(adapt_delta = 0.97),
+              (1 | site/beach/recruit_date),
+          family = bernoulli, data = data_follow, prior = priors2,
+          iter = 2000, chains = 4, cores = 4, warmup = 1000, seed = 9748160, control = list(adapt_delta = 0.99),
           backend = "cmdstanr", stan_model_args = list(stanc_options = list("O1")))
 
 summary(m5.1, robust = TRUE)
@@ -313,10 +296,10 @@ loo(m5, m5.1)
 
 m6 <- brm(agi3 ~ 0 + Intercept + mo(water_contact3)*log_mst_human_s + age4 + gender + education2 + ethnicity + cond_GI + 
             cond_immune + cond_allergy + other_rec_act + beach_exp_food + sand_contact + household_group +
-            (mo(water_contact3) | site/beach/recruit_date),
-            family = bernoulli, data = data_follow, prior = priors_rslopes,
-            iter = 2000, chains = 4, cores = 4, warmup = 1000, seed = 9987291, control = list(adapt_delta = 0.95),
-            backend = "cmdstanr", stan_model_args = list(stanc_options = list("O1")))
+            (1 | site/beach/recruit_date),
+          family = bernoulli, data = data_follow, prior = priors2,
+          iter = 2000, chains = 4, cores = 4, warmup = 1000, seed = 9987291, control = list(adapt_delta = 0.99),
+          backend = "cmdstanr", stan_model_args = list(stanc_options = list("O1")))
 
 summary(m6, robust = TRUE)
 get_variables(m6)
@@ -330,10 +313,10 @@ conditional_effects(m6, effects = "water_contact3")
 
 m6.1 <- brm(agi3 ~ 0 + Intercept + mo(water_contact3)*log_mst_human_max_s + age4 + gender + education2 + ethnicity + cond_GI + 
               cond_immune + cond_allergy + other_rec_act + beach_exp_food + sand_contact + household_group +
-              (mo(water_contact3) | site/beach/recruit_date),
-          family = bernoulli, data = data_follow, prior = priors_rslopes,
-          iter = 2000, chains = 4, cores = 4, warmup = 1000, seed = 3699795, control = list(adapt_delta = 0.95),
-          backend = "cmdstanr", stan_model_args = list(stanc_options = list("O1")))
+              (1 | site/beach/recruit_date),
+            family = bernoulli, data = data_follow, prior = priors2,
+            iter = 2000, chains = 4, cores = 4, warmup = 1000, seed = 3699795, control = list(adapt_delta = 0.99),
+            backend = "cmdstanr", stan_model_args = list(stanc_options = list("O1")))
 
 summary(m6.1, robust = TRUE)
 get_variables(m6.1)
@@ -359,9 +342,9 @@ loo(m6, m6.1)
 
 m6.2 <- brm(agi3 ~ 0 + Intercept + mo(water_contact3)*mo(mst_human_max_cut) + age4 + gender + education2 + ethnicity + cond_GI + 
               cond_immune + cond_allergy + other_rec_act + beach_exp_food + sand_contact + household_group +
-              (mo(water_contact3) | site/beach/recruit_date),
-            family = bernoulli, data = data_follow, prior = priors_rslopes,
-            iter = 2000, chains = 4, cores = 4, warmup = 1000, seed = 2332031, control = list(adapt_delta = 0.95),
+              (1 | site/beach/recruit_date),
+            family = bernoulli, data = data_follow, prior = priors2,
+            iter = 2000, chains = 4, cores = 4, warmup = 1000, seed = 2332031, control = list(adapt_delta = 0.99),
             backend = "cmdstanr", stan_model_args = list(stanc_options = list("O1")))
 
 summary(m6.2, robust = TRUE)
@@ -379,9 +362,9 @@ conditional_effects(m6.2, effects = "water_contact3")
 
 m7 <- brm(agi3 ~ 0 + Intercept + mo(water_contact3)*log_mst_human_mt_s + age4 + gender + education2 + ethnicity + cond_GI + 
             cond_immune + cond_allergy + other_rec_act + beach_exp_food + sand_contact + household_group +
-            (mo(water_contact3) | site/beach/recruit_date),
-          family = bernoulli, data = data_follow, prior = priors_rslopes,
-          iter = 2000, chains = 4, cores = 4, warmup = 1000, seed = 6643742, control = list(adapt_delta = 0.95),
+            (1 | site/beach/recruit_date),
+          family = bernoulli, data = data_follow, prior = priors2,
+          iter = 2000, chains = 4, cores = 4, warmup = 1000, seed = 6643742, control = list(adapt_delta = 0.99),
           backend = "cmdstanr", stan_model_args = list(stanc_options = list("O1")))
 
 summary(m7, robust = TRUE)
@@ -395,9 +378,9 @@ conditional_effects(m7, effects = "water_contact3")
 
 m7.1 <- brm(agi3 ~ 0 + Intercept + mo(water_contact3)*log_mst_human_mt_max_s + age4 + gender + education2 + ethnicity + cond_GI + 
               cond_immune + cond_allergy + other_rec_act + beach_exp_food + sand_contact + household_group +
-              (mo(water_contact3) | site/beach/recruit_date),
-            family = bernoulli, data = data_follow, prior = priors_rslopes,
-            iter = 2000, chains = 4, cores = 4, warmup = 1000, seed = 3896446, control = list(adapt_delta = 0.95),
+              (1 | site/beach/recruit_date),
+            family = bernoulli, data = data_follow, prior = priors2,
+            iter = 2000, chains = 4, cores = 4, warmup = 1000, seed = 3896446, control = list(adapt_delta = 0.99),
             backend = "cmdstanr", stan_model_args = list(stanc_options = list("O1")))
 
 summary(m7.1, robust = TRUE)
@@ -423,9 +406,9 @@ ppc_calibration_pava(y, 0.95, yrep[1:100,])
 
 m7.2 <- brm(agi3 ~ 0 + Intercept + mo(water_contact3)*mo(mst_human_mt_max_cut) + age4 + gender + education2 + ethnicity + cond_GI + 
               cond_immune + cond_allergy + other_rec_act + beach_exp_food + sand_contact + household_group +
-              (mo(water_contact3) | site/beach/recruit_date),
-            family = bernoulli, data = data_follow, prior = priors_rslopes,
-            iter = 2000, chains = 4, cores = 4, warmup = 1000, seed = 5518709, control = list(adapt_delta = 0.95),
+              (1 | site/beach/recruit_date),
+            family = bernoulli, data = data_follow, prior = priors2,
+            iter = 2000, chains = 4, cores = 4, warmup = 1000, seed = 5518709, control = list(adapt_delta = 0.99),
             backend = "cmdstanr", stan_model_args = list(stanc_options = list("O1")))
 
 summary(m7.2, robust = TRUE)
@@ -442,9 +425,9 @@ conditional_effects(m7.2, effects = "water_contact3")
 
 m8 <- brm(agi3 ~ 0 + Intercept + mo(water_contact3)*log_mst_gull_s + age4 + gender + education2 + ethnicity + cond_GI + 
             cond_immune + cond_allergy + other_rec_act + beach_exp_food + sand_contact + household_group +
-            (mo(water_contact3) | site/beach/recruit_date),
-          family = bernoulli, data = data_follow, prior = priors_rslopes,
-          iter = 2000, chains = 4, cores = 4, warmup = 1000, seed = 7346976, control = list(adapt_delta = 0.95),
+            (1 | site/beach/recruit_date),
+          family = bernoulli, data = data_follow, prior = priors2,
+          iter = 2000, chains = 4, cores = 4, warmup = 1000, seed = 7346976, control = list(adapt_delta = 0.99),
           backend = "cmdstanr", stan_model_args = list(stanc_options = list("O1")))
 
 summary(m8, robust = TRUE)
@@ -458,9 +441,9 @@ conditional_effects(m8, effects = "water_contact3")
 
 m8.1 <- brm(agi3 ~ 0 + Intercept + mo(water_contact3)*log_mst_gull_max_s + age4 + gender + education2 + ethnicity + cond_GI + 
               cond_immune + cond_allergy + other_rec_act + beach_exp_food + sand_contact + household_group +
-              (mo(water_contact3) | site/beach/recruit_date),
-            family = bernoulli, data = data_follow, prior = priors_rslopes,
-            iter = 2000, chains = 4, cores = 4, warmup = 1000, seed = 9412852, control = list(adapt_delta = 0.95),
+              (1 | site/beach/recruit_date),
+            family = bernoulli, data = data_follow, prior = priors2,
+            iter = 2000, chains = 4, cores = 4, warmup = 1000, seed = 9412852, control = list(adapt_delta = 0.99),
             backend = "cmdstanr", stan_model_args = list(stanc_options = list("O1")))
 
 summary(m8.1, robust = TRUE)
@@ -488,10 +471,10 @@ loo(m8, m8.1)
 
 m9 <- brm(agi3 ~ 0 + Intercept + mo(water_contact3)*log_turbidity_s + age4 + gender + education2 + ethnicity + cond_GI + 
             cond_immune + cond_allergy + other_rec_act + beach_exp_food + sand_contact + household_group +
-            (mo(water_contact3) | site/beach/recruit_date), 
-            family = bernoulli, data = data_follow, prior = priors_rslopes,
-            iter = 2000, chains = 4, cores = 4, warmup = 1000, seed = 6642008, control = list(adapt_delta = 0.99),
-            backend = "cmdstanr", stan_model_args = list(stanc_options = list("O1")))
+            (1 | site/beach/recruit_date),
+          family = bernoulli, data = data_follow, prior = priors2,
+          iter = 2000, chains = 4, cores = 4, warmup = 1000, seed = 6642008, control = list(adapt_delta = 0.99),
+          backend = "cmdstanr", stan_model_args = list(stanc_options = list("O1")))
 
 summary(m9, robust = TRUE)
 get_variables(m9)
@@ -510,41 +493,12 @@ y <- y$agi4
 yrep <- posterior_predict(m9, draws = 500)
 ppc_calibration_pava(y, 0.95, yrep[1:100,]) 
 
-## Reproduce other FIB models with same number of observations for LOO comparisons
-
-data_follow_entero <- data_follow |> 
-  drop_na(any_of(c("log_e_coli_s", "log_entero_s")))
-
-m4.2_comp <- brm(agi3 ~ 0 + Intercept + mo(water_contact3)*log_e_coli_max_s + age4 + gender + education2 + ethnicity + cond_GI + 
-                   cond_immune + cond_allergy + other_rec_act + beach_exp_food + sand_contact + 
-                   (mo(water_contact3) | site/beach/recruit_date) + (1 | beach:recruit_date:house_id),
-               family = bernoulli, data = data_follow_entero, prior = priors_rslopes,
-               iter = 2000, chains = 4, cores = 4, warmup = 1000, seed = 5340532, control = list(adapt_delta = 0.95),
-               backend = "cmdstanr", stan_model_args = list(stanc_options = list("O1")))
-
-loo(m4.2_comp, m5.1)
-
-loo(m4.2, m6.1, m7.1, m8.1)
-
-
-data_follow_any <- data_follow |> 
-  drop_na(any_of(c("log_e_coli_s", "log_entero_s", "log_mst_human_s", "log_mst_human_mt_s")))
-
-m6.1_comp <- brm(agi3 ~ 0 + Intercept + mo(water_contact3)*log_mst_human_max_s + age4 + gender + education2 + ethnicity + cond_GI + 
-                   cond_immune + cond_allergy + other_rec_act + beach_exp_food + sand_contact + 
-                   (mo(water_contact3) | site/beach/recruit_date) + (1 | beach:recruit_date:house_id),
-                family = bernoulli, data = data_follow_any, prior = priors_rslopes,
-                iter = 2000, chains = 4, cores = 4, warmup = 1000, seed = 7490876, control = list(adapt_delta = 0.95),
-                backend = "cmdstanr", stan_model_args = list(stanc_options = list("O1")))
-
-loo(m4.2_comp, m5.1, m6.1_comp)
-
 
 ### Negative control analysis - E. coli
 
 data_neg_control <- data_follow |> filter(water_contact3 == "No contact")
 
-priors_nc <- c(set_prior("normal(0, 1)", class = "b"), 
+priors_nc <- c(set_prior("normal(0, 1.5)", class = "b"), 
               set_prior("exponential(1)", class = "sd"))
 
 m.nc <- brm(agi3 ~ 0 + Intercept + log_e_coli_max_s + age4 + gender + education2 + ethnicity + cond_GI + 
@@ -576,13 +530,12 @@ data_follow <- data_follow |>
 data_follow |> group_by(date) |> ggplot(aes(x = water_time)) + geom_histogram()
 data_follow |> group_by(date) |> ggplot(aes(x = water_time_s)) + geom_histogram()
 
-priors3 <- c(set_prior("normal(0,1)",class= "b"),
-             set_prior("exponential(1)", class = "sd"),
-             set_prior("lkj(2)", class = "cor"))
+priors3 <- c(set_prior("normal(0,1.5)",class= "b"),
+             set_prior("exponential(1)", class = "sd"))
 
 m_watertime <- brm(agi3 ~ 0 + Intercept + water_time_s*log_e_coli_max_s + age4 + gender + education2 + ethnicity + cond_GI + 
                      cond_immune + cond_allergy + other_rec_act + beach_exp_food + sand_contact + household_group +
-              (water_time_s | site/beach/recruit_date),
+              (1 | site/beach/recruit_date),
             family = bernoulli, data = data_follow, prior = priors3,
             iter = 2000, chains = 4, cores = 4, warmup = 1000, seed = 2688412, control = list(adapt_delta = 0.99),
             backend = "cmdstanr", stan_model_args = list(stanc_options = list("O1")))
@@ -600,8 +553,8 @@ conditional_effects(m_watertime, effects = "water_time_s")
 
 m_diar <- brm(diarrhea3 ~ 0 + Intercept + mo(water_contact3)*log_e_coli_max_s + age4 + gender + education2 + ethnicity + cond_GI + 
                 cond_immune + cond_allergy + other_rec_act + beach_exp_food + sand_contact + household_group +
-                (mo(water_contact3) | site/beach/recruit_date),
-            family = bernoulli, data = data_follow, prior = priors_rslopes,
+                (1 | site/beach/recruit_date),
+            family = bernoulli, data = data_follow, prior = priors2,
             iter = 2000, chains = 4, cores = 4, warmup = 1000, seed = 8222925, control = list(adapt_delta = 0.99),
             backend = "cmdstanr", stan_model_args = list(stanc_options = list("O1")))
 
@@ -618,10 +571,10 @@ conditional_effects(m_diar, effects = "water_contact3")
 
 m_3day <- brm(agi_3day ~ 0 + Intercept + mo(water_contact3)*log_e_coli_max_s + age4 + gender + education2 + ethnicity + cond_GI + 
                 cond_immune + cond_allergy + other_rec_act + beach_exp_food + sand_contact + household_group +
-                (mo(water_contact3) | site/beach/recruit_date),
-                family = bernoulli, data = data_follow, prior = priors_rslopes,
-                iter = 2000, chains = 4, cores = 4, warmup = 1000, seed = 856241, control = list(adapt_delta = 0.99),
-                backend = "cmdstanr", stan_model_args = list(stanc_options = list("O1")))
+                (1 | site/beach/recruit_date),
+              family = bernoulli, data = data_follow, prior = priors2,
+              iter = 2000, chains = 4, cores = 4, warmup = 1000, seed = 856241, control = list(adapt_delta = 0.99),
+              backend = "cmdstanr", stan_model_args = list(stanc_options = list("O1")))
 
 summary(m_3day, robust = TRUE)
 get_variables(m_3day)
@@ -637,8 +590,8 @@ conditional_effects(m_3day, effects = "water_contact3")
 
 m_5day <- brm(agi_5day ~ 0 + Intercept + mo(water_contact3)*log_e_coli_max_s + age4 + gender + education2 + ethnicity + cond_GI + 
                 cond_immune + cond_allergy + other_rec_act + beach_exp_food + sand_contact + household_group +
-                (mo(water_contact3) | site/beach/recruit_date),
-              family = bernoulli, data = data_follow, prior = priors_rslopes,
+                (1 | site/beach/recruit_date),
+              family = bernoulli, data = data_follow, prior = priors2,
               iter = 2000, chains = 4, cores = 4, warmup = 1000, seed = 8894629, control = list(adapt_delta = 0.99),
               backend = "cmdstanr", stan_model_args = list(stanc_options = list("O1")))
 
@@ -651,16 +604,15 @@ pp_check(m_5day, type = "stat", stat = "mean")
 conditional_effects(m_5day, effects = "log_e_coli_max_s:water_contact3")
 conditional_effects(m_5day, effects = "water_contact3")
 
-# Weaker priors: normal(0,2)
+# Weaker priors: normal(0,5)
 
-priors_weak <- c(set_prior("normal(0,2)", class = "b"),
+priors_weak <- c(set_prior("normal(0,5)", class = "b"),
                  set_prior("exponential(1)", class = "sd"),
-                 set_prior("dirichlet(c(1, 1, 1))", class = "simo", coef = "mowater_contact31"),
-                 set_prior("lkj(2)", class = "cor"))
+                 set_prior("dirichlet(c(1, 1, 1))", class = "simo", coef = "mowater_contact31"))
 
 m_weak <- brm(agi3 ~ 0 + Intercept + mo(water_contact3)*log_e_coli_max_s + age4 + gender + education2 + ethnicity + cond_GI + 
                 cond_immune + cond_allergy + other_rec_act + beach_exp_food + sand_contact + household_group +
-                (mo(water_contact3) | site/beach/recruit_date),
+                (1 | site/beach/recruit_date),
                 family = bernoulli, data = data_follow, prior = priors_weak,
                 iter = 2000, chains = 4, cores = 4, warmup = 1000, seed = 2874090, control = list(adapt_delta = 0.99),
                 backend = "cmdstanr", stan_model_args = list(stanc_options = list("O1")))
@@ -680,8 +632,8 @@ conditional_effects(m_weak, effects = "water_contact3")
 
 m.gender <- brm(agi3 ~ 0 + Intercept + mo(water_contact3)*log_e_coli_max_s + age4 + mo(water_contact3)*gender + education2 + ethnicity + cond_GI + 
                cond_immune + cond_allergy + other_rec_act + beach_exp_food + sand_contact + household_group +
-               (mo(water_contact3) | site/beach/recruit_date),
-             family = bernoulli, data = data_follow, prior = priors_rslopes,
+               (1 | site/beach/recruit_date),
+             family = bernoulli, data = data_follow, prior = priors2,
              iter = 2000, chains = 4, cores = 4, warmup = 1000, seed = 2656855, control = list(adapt_delta = 0.99),
              backend = "cmdstanr", stan_model_args = list(stanc_options = list("O1")))
 
@@ -704,7 +656,7 @@ y <- y$agi4
 yrep <- posterior_predict(m.gender, draws = 500)
 ppc_calibration_pava(y, 0.95, yrep[1:100,])
 
-loo(m.gender, m4.1r)
+loo(m.gender, m4.1)
 
 # Does not fit as well as non-interaction model
 
@@ -723,11 +675,10 @@ data_follow <- data_follow |>
 
 m.age <- brm(agi3 ~ 0 + Intercept + mo(water_contact3)*log_e_coli_max_s + mo(water_contact3)*age_group + gender + education2 + ethnicity + cond_GI + 
                   cond_immune + cond_allergy + other_rec_act + beach_exp_food + sand_contact + household_group +
-                  (mo(water_contact3) | site/beach/recruit_date),
-                family = bernoulli, data = data_follow, prior = priors_rslopes,
+                  (1 | site/beach/recruit_date),
+                family = bernoulli, data = data_follow, prior = priors2,
                 iter = 2000, chains = 4, cores = 4, warmup = 1000, seed = 107693, control = list(adapt_delta = 0.99),
                 backend = "cmdstanr", stan_model_args = list(stanc_options = list("O1")))
-
 
 summary(m.age, robust = TRUE)
 get_variables(m.age)
@@ -748,7 +699,7 @@ y <- y$agi4
 yrep <- posterior_predict(m.age, draws = 500)
 ppc_calibration_pava(y, 0.95, yrep[1:100,])
 
-loo(m.age, m4.1r)
+loo(m.age, m4.1)
 
 # Does not fit as well as non-interaction model
 
@@ -760,22 +711,22 @@ data_house <- data_follow |> group_by(house_id, agi3) |>
 
 data_house |> tabyl(agi3)
 
-m4.1r.house <- brm(agi3 ~ 0 + Intercept + mo(water_contact3)*log_e_coli_max_s + age4 + gender + education2 + ethnicity + cond_GI + 
+m4.1.house <- brm(agi3 ~ 0 + Intercept + mo(water_contact3)*log_e_coli_max_s + age4 + gender + education2 + ethnicity + cond_GI + 
                cond_immune + cond_allergy + other_rec_act + beach_exp_food + sand_contact +
-               (mo(water_contact3) | site/beach/recruit_date),
-             family = bernoulli, data = data_house, prior = priors_rslopes,
+               (1 | site/beach/recruit_date),
+             family = bernoulli, data = data_house, prior = priors2,
              iter = 2000, chains = 4, cores = 4, warmup = 1000, seed = 7101467, control = list(adapt_delta = 0.99),
              backend = "cmdstanr", stan_model_args = list(stanc_options = list("O1")))
 
-summary(m4.1r.house, robust = TRUE)
-get_variables(m4.1r.house)
-plot(m4.1r.house)
-pp_check(m4.1r.house, ndraws=100)
-pp_check(m4.1r.house, type = "stat", stat = "mean")
-stancode(m4.1r.house)
+summary(m4.1.house, robust = TRUE)
+get_variables(m4.1.house)
+plot(m4.1.house)
+pp_check(m4.1.house, ndraws=100)
+pp_check(m4.1.house, type = "stat", stat = "mean")
+stancode(m4.1.house)
 
-conditional_effects(m4.1r.house, effects = "log_e_coli_max_s:water_contact3")
-conditional_effects(m4.1r.house, effects = "water_contact3") -> fit
+conditional_effects(m4.1.house, effects = "log_e_coli_max_s:water_contact3")
+conditional_effects(m4.1.house, effects = "water_contact3") -> fit
 fit$water_contact3
 
 
@@ -785,6 +736,6 @@ y <- data_house |> mutate(agi4 = if_else(agi3=="No", 0, 1)) |>
   drop_na(any_of(c("log_e_coli_max_s", "age4", "gender", "education2", "ethnicity", "cond_GI", 
                    "other_rec_act", "beach_exp_food", "sand_contact")))
 y <- y$agi4
-yrep <- posterior_predict(m4.1r.house, draws = 500)
+yrep <- posterior_predict(m4.1.house, draws = 500)
 ppc_calibration_pava(y, 0.95, yrep[1:100,])
 
