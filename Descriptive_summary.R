@@ -75,12 +75,17 @@ data_follow |>
 
 # FIB summary stats
 
-old <- options(pillar.sigfig = 5)
+old <- options(pillar.sigfig = 6)
 
 data |> 
   distinct(recruit_date, .keep_all=TRUE) |> 
   get_summary_stats(e_coli, e_coli_max, entero_cce, entero_cce_max, 
-                    mst_human, mst_human_max, mst_human_mt, mst_human_mt_max, turbidity) 
+                    mst_human, mst_human_max, mst_human_mt, mst_human_mt_max, 
+                    mst_gull, mst_gull_max, turbidity) 
+
+data |> 
+  distinct(recruit_date, .keep_all=TRUE) |> 
+  get_summary_stats(mst_gull, mst_gull_max) 
 
 data |> distinct(recruit_date, .keep_all=TRUE) |> tabyl(ecoli_thresholds)
 data |> distinct(recruit_date, .keep_all=TRUE) |> tabyl(ecoli_bav)
@@ -109,62 +114,57 @@ data <- data |> mutate(mst_human_mt_max_cut = case_when(
   mutate(mst_human_mt_max_cut = factor(mst_human_mt_max_cut, ordered = T,
                levels = c("0", "1-113", "114-245", ">245")))                       
 
-data |> distinct(date, e_coli_max, site) |> 
+data |> distinct(date, e_coli_max, beach) |> 
   mutate(e_coli_max = if_else(e_coli_max > 0, 1, 0)) |> 
-  tabyl(e_coli_max, site) |> 
+  tabyl(beach, e_coli_max) |> 
   adorn_percentages("col") |> 
   adorn_totals("row") |> 
   adorn_ns() 
 
-data |> distinct(date, entero_cce_max, site) |> 
+data |> distinct(date, entero_cce_max, beach) |> 
   mutate(entero_cce_max = if_else(entero_cce_max > 0, 1, 0)) |> 
-  tabyl(entero_cce_max, site) |> 
+  tabyl(beach, entero_cce_max) |> 
   adorn_percentages("col") |> 
-  adorn_totals("row") |> 
-  adorn_ns() 
-
-data |> distinct(date, mst_human_yn, site) |> 
-  tabyl(mst_human_yn, site) |> 
-  adorn_percentages("col") |> 
-  adorn_totals("row") |> 
-  adorn_ns() 
-
-data |> distinct(date, mst_human_mt_yn, site) |> 
-  tabyl(mst_human_mt_yn, site) |> 
-  adorn_percentages("col") |> 
-  adorn_totals("row") |> 
-  adorn_ns() 
-
-data |> distinct(date, mst_goose_yn, site) |> 
-  tabyl(mst_goose_yn, site) |> 
-  adorn_percentages("col") |> 
-  adorn_totals("row") |> 
-  adorn_ns() 
-
-data |> distinct(date, turbidity, site) |> 
-  mutate(turbidity_yn = if_else(turbidity > 0, 1, 0)) |> 
-  tabyl(turbidity_yn, site) |> 
-  adorn_percentages("col") |> 
+  adorn_totals("col") |>
   adorn_totals("row") |> 
   adorn_ns() 
 
 data |> distinct(date, mst_human_yn, beach) |> 
-  tabyl(mst_human_yn, beach) |> 
+  tabyl(beach, mst_human_yn) |> 
   adorn_percentages("col") |> 
+  adorn_totals("col") |>
   adorn_totals("row") |> 
   adorn_ns() 
 
 data |> distinct(date, mst_human_mt_yn, beach) |> 
-  tabyl(mst_human_mt_yn, beach) |> 
+  tabyl(beach, mst_human_mt_yn) |> 
   adorn_percentages("col") |> 
+  adorn_totals("col") |>
+  adorn_totals("row") |> 
+  adorn_ns() 
+
+data |> distinct(date, mst_gull_yn, beach) |> 
+  tabyl(beach, mst_gull_yn) |> 
+  adorn_percentages("col") |> 
+  adorn_totals("col") |>
   adorn_totals("row") |> 
   adorn_ns() 
 
 data |> distinct(date, mst_goose_yn, beach) |> 
-  tabyl(mst_goose_yn, beach) |> 
+  tabyl(beach, mst_goose_yn) |> 
   adorn_percentages("col") |> 
+  adorn_totals("col") |>
   adorn_totals("row") |> 
   adorn_ns() 
+
+data |> distinct(date, turbidity, beach) |> 
+  mutate(turbidity_yn = if_else(turbidity > 0, 1, 0)) |> 
+  tabyl(beach, turbidity_yn) |> 
+  adorn_percentages("col") |> 
+  adorn_totals("col") |>
+  adorn_totals("row") |> 
+  adorn_ns() 
+
 
 # Histograms
 

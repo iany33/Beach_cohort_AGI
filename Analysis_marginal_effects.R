@@ -839,14 +839,11 @@ Fig_human <- Fig_human + theme(legend.position = "none")
 Fig_human_mt <- Fig_human_mt + theme(legend.position = "none")
 Fig_gull <- Fig_gull + theme(legend.position = "none")
 Fig_ecoli <- Fig_ecoli + theme(legend.position = "none")
-Fig_entero <- Fig_entero + theme(legend.position = "none")
-Fig_turbidity <- Fig_turbidity + theme(legend.position = "none")
 
 Fig5 <- Fig_ecoli + Fig_human + Fig_human_mt + Fig_gull + Fig_entero + Fig_turbidity
 Fig5 + plot_annotation(tag_levels = 'A') + plot_layout(ncol = 2)
 
-remove(Fig_ecoli, Fig_human, Fig_human_mt, Fig_gull, Fig_entero, Fig_turbidity, Fig5)
-
+remove(Fig_ecoli, Fig_human, Fig_human_mt, Fig_gull, Fig_entero, Fig_turbidity)
 
 
 ### Marginal effects for sensitivity analysis models
