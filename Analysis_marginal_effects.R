@@ -57,7 +57,9 @@ ggplot(pred, aes(x = draw, y = water_contact3, fill = water_contact3)) +
   theme_minimal() +
   theme(legend.position = "none") +
   scale_fill_viridis(discrete=TRUE, option = "turbo") +
-  xlim(0, 100)  -> Fig1
+  xlim(0, 100)  
+
+ggsave("Fig1.png", width = 6, height = 6, dpi = 600)
 
 # Examine marginal effects/contrast of water contact exposure effect - probability scale
 
@@ -120,6 +122,8 @@ Fig2B <- Fig2B + scale_y_discrete(labels = NULL)
 Fig2 <- Fig2A + Fig2B
 Fig2 + plot_annotation(tag_levels = 'A')
 
+ggsave("Fig2.png", width = 9, height = 4.5, dpi = 600)
+
 remove(Fig2, Fig2A, Fig2B)
 
 # Gender specific estimates 
@@ -142,12 +146,14 @@ mfx <- mfx |>
 ggplot(mfx, aes(x = draw, y = gender, fill = gender)) +
   stat_halfeye(slab_alpha = .5)  +
   geom_vline(xintercept = 0, linetype = "dashed") +
-  labs(x = "Effect of Water Contact on AGI Incident Risk per 1000 Beachgoers", y = "") +
+  labs(x = "Effect of Water Contact on AGI Incident Risk per 1000 Beachgoers", y = "Gender Identity") +
   theme_minimal() +
   theme(legend.position = "none") +
-  xlim(-10, 150) +
+  xlim(-10, 100) +
   scale_fill_viridis(discrete=TRUE, option = "turbo") +
   facet_wrap(~ contrast)
+
+ggsave("Fig3.png", width = 6, height = 6, dpi = 600)
 
 # Age specific estimates 
 
@@ -168,12 +174,14 @@ mfx <- mfx |>
 ggplot(mfx, aes(x = draw, y = age4, fill = age4)) +
   stat_halfeye(slab_alpha = .5)  +
   geom_vline(xintercept = 0, linetype = "dashed") +
-  labs(x = "Effect of Water Contact on AGI Incident Risk per 1000 Beachgoers", y = "") +
+  labs(x = "Effect of Water Contact on AGI Incident Risk per 1000 Beachgoers", y = "Age Group") +
   theme_minimal() +
   theme(legend.position = "none") +
-  xlim(-10, 150) +
+  xlim(-10, 100) +
   scale_fill_viridis(discrete=TRUE, option = "turbo") +
   facet_wrap(~ contrast)
+
+ggsave("Fig4.png", width = 6, height = 7, dpi = 600)
 
 # Predicted probabilities of E. coli, conditional on water contact level
 # Sequence E. coli by range of logged, standardized and centered variable then back-transform
@@ -302,7 +310,7 @@ mfx <- mfx |>
 ggplot(mfx, aes(x = draw, y = contrast, fill = factor(log_e_coli_max_s))) +
   stat_halfeye(slab_alpha = .5)  +
   geom_vline(xintercept = 0, linetype = "dashed") +
-  labs(x = "Water Contact Effect on AGI Incident Risk per 1000 Beachgoers at Specific E. coli Values", y = "") +
+  labs(x = "Water Contact Effect on AGI Incident Risk per 1000 Beachgoers", y = "") +
   theme_minimal() +
   theme(legend.position = "none") +
   scale_fill_viridis(discrete=TRUE, option = "turbo") +
@@ -312,12 +320,14 @@ ggplot(mfx, aes(x = draw, y = contrast, fill = factor(log_e_coli_max_s))) +
 ggplot(mfx, aes(x = draw, y = factor(e_coli), fill = factor(log_e_coli_max_s))) +
   stat_halfeye(slab_alpha = .5)  +
   geom_vline(xintercept = 0, linetype = "dashed") +
-  labs(x = "Water Contact Effect on AGI Incident Risk per 1000 Beachgoers at Specific E. coli Values", y = "") +
+  labs(x = "Water Contact Effect on AGI Incident Risk per 1000 Beachgoers", y = "E. coli Percentile Value (CFU/100 mL)") +
   theme_minimal() +
   theme(legend.position = "none") +
   scale_fill_viridis(discrete=TRUE, option = "turbo") +
   facet_wrap(~ contrast) +
   xlim(-15, 100)
+
+ggsave("Fig6.png", width = 6, height = 6, dpi = 600)
 
 # Average comparisons 
 
@@ -456,7 +466,7 @@ nd <- data_follow |>
             log_entero_max_s = list$log_entero_max_s, 
             age4 = c("0-4", "5-9", "10-14", "15-19", "20+"),
             gender = c("woman/girl", "man/boy", "fluid/trans"),
-            ethnicity = "White", education2 = "bachelors", cond_GI = "No", cond_immune = "No",
+            education2 = "bachelors", cond_GI = "No", cond_immune = "No",
             cond_allergy = "No", other_rec_act = "Yes", beach_exp_food = "Yes", 
             sand_contact = "No", household_group = "Yes") 
 
@@ -535,7 +545,7 @@ nd <- data_follow |>
             log_entero_max_s = seq(-2.014249, 3.1953, by = 0.4), 
             age4 = c("0-4", "5-9", "10-14", "15-19", "20+"),
             gender = c("woman/girl", "man/boy", "fluid/trans"),
-            ethnicity = "White", education2 = "bachelors", cond_GI = "No", cond_immune = "No",
+            education2 = "bachelors", cond_GI = "No", cond_immune = "No",
             cond_allergy = "No", other_rec_act = "Yes", beach_exp_food = "Yes", 
             sand_contact = "No", household_group = "Yes") 
 
@@ -587,7 +597,7 @@ nd <- data_follow |>
             log_mst_human_mt_max_s = list$log_mst_human_mt_max_s, 
             age4 = c("0-4", "5-9", "10-14", "15-19", "20+"),
             gender = c("woman/girl", "man/boy", "fluid/trans"),
-            ethnicity = "White", education2 = "bachelors", cond_GI = "No", cond_immune = "No",
+            education2 = "bachelors", cond_GI = "No", cond_immune = "No",
             cond_allergy = "No", other_rec_act = "Yes", beach_exp_food = "Yes", 
             sand_contact = "No", household_group = "Yes") 
 
@@ -610,7 +620,7 @@ nd <- data_follow |>
             log_mst_human_mt_max_s = seq(-1.695368, 1.567463, by = 0.4), 
             age4 = c("0-4", "5-9", "10-14", "15-19", "20+"),
             gender = c("woman/girl", "man/boy", "fluid/trans"),
-            ethnicity = "White", education2 = "bachelors", cond_GI = "No", cond_immune = "No",
+            education2 = "bachelors", cond_GI = "No", cond_immune = "No",
             cond_allergy = "No", other_rec_act = "Yes", beach_exp_food = "Yes", 
             sand_contact = "No", household_group = "Yes") 
 
@@ -654,7 +664,7 @@ nd <- data_follow |>
             log_mst_human_max_s = list$log_mst_human_max_s, 
             age4 = c("0-4", "5-9", "10-14", "15-19", "20+"),
             gender = c("woman/girl", "man/boy", "fluid/trans"),
-            ethnicity = "White", education2 = "bachelors", cond_GI = "No", cond_immune = "No",
+            education2 = "bachelors", cond_GI = "No", cond_immune = "No",
             cond_allergy = "No", other_rec_act = "Yes", beach_exp_food = "Yes", 
             sand_contact = "No", household_group = "Yes") 
 
@@ -678,7 +688,7 @@ nd <- data_follow |>
             log_mst_human_max_s = seq(-0.8906186, 2.3137543, by = 0.4), 
             age4 = c("0-4", "5-9", "10-14", "15-19", "20+"),
             gender = c("woman/girl", "man/boy", "fluid/trans"),
-            ethnicity = "White", education2 = "bachelors", cond_GI = "No", cond_immune = "No",
+            education2 = "bachelors", cond_GI = "No", cond_immune = "No",
             cond_allergy = "No", other_rec_act = "Yes", beach_exp_food = "Yes", 
             sand_contact = "No", household_group = "Yes") 
 
@@ -718,7 +728,7 @@ nd <- data_follow |>
             log_mst_gull_max_s = list$log_mst_gull_max_s, 
             age4 = c("0-4", "5-9", "10-14", "15-19", "20+"),
             gender = c("woman/girl", "man/boy", "fluid/trans"),
-            ethnicity = "White", education2 = "bachelors", cond_GI = "No", cond_immune = "No",
+            education2 = "bachelors", cond_GI = "No", cond_immune = "No",
             cond_allergy = "No", other_rec_act = "Yes", beach_exp_food = "Yes", 
             sand_contact = "No", household_group = "Yes") 
 
@@ -741,7 +751,7 @@ nd <- data_follow |>
             log_mst_gull_max_s = seq(-2.718343, 1.832380, by = 0.4), 
             age4 = c("0-4", "5-9", "10-14", "15-19", "20+"),
             gender = c("woman/girl", "man/boy", "fluid/trans"),
-            ethnicity = "White", education2 = "bachelors", cond_GI = "No", cond_immune = "No",
+            education2 = "bachelors", cond_GI = "No", cond_immune = "No",
             cond_allergy = "No", other_rec_act = "Yes", beach_exp_food = "Yes", 
             sand_contact = "No", household_group = "Yes") 
 
@@ -784,7 +794,7 @@ nd <- data_follow |>
             log_turbidity_s = list$log_turbidity_s, 
             age4 = c("0-4", "5-9", "10-14", "15-19", "20+"),
             gender = c("woman/girl", "man/boy", "fluid/trans"),
-            ethnicity = "White", education2 = "bachelors", cond_GI = "No", cond_immune = "No",
+            education2 = "bachelors", cond_GI = "No", cond_immune = "No",
             cond_allergy = "No", other_rec_act = "Yes", beach_exp_food = "Yes", 
             sand_contact = "No", household_group = "Yes") 
 
@@ -804,7 +814,7 @@ nd <- data_follow |>
             log_turbidity_s = seq(-1.149963, 2.982043, by = 0.4), 
             age4 = c("0-4", "5-9", "10-14", "15-19", "20+"),
             gender = c("woman/girl", "man/boy", "fluid/trans"),
-            ethnicity = "White", education2 = "bachelors", cond_GI = "No", cond_immune = "No",
+            education2 = "bachelors", cond_GI = "No", cond_immune = "No",
             cond_allergy = "No", other_rec_act = "Yes", beach_exp_food = "Yes", 
             sand_contact = "No", household_group = "Yes") 
 
@@ -843,6 +853,8 @@ Fig_ecoli <- Fig_ecoli + theme(legend.position = "none")
 Fig5 <- Fig_ecoli + Fig_human + Fig_human_mt + Fig_gull + Fig_entero + Fig_turbidity
 Fig5 + plot_annotation(tag_levels = 'A') + plot_layout(ncol = 2)
 
+ggsave("Fig5.png", width = 8, height = 8, dpi = 600)
+
 remove(Fig_ecoli, Fig_human, Fig_human_mt, Fig_gull, Fig_entero, Fig_turbidity)
 
 
@@ -862,7 +874,7 @@ nd <- data_follow |>
             water_time_s = seq(-0.6142013, 9.7476305, by = 0.4),
             age4 = c("0-4", "5-9", "10-14", "15-19", "20+"),
             gender = c("woman/girl", "man/boy", "fluid/trans"),
-            ethnicity = "White", education2 = "bachelors", cond_GI = "No", cond_immune = "No",
+            education2 = "bachelors", cond_GI = "No", cond_immune = "No",
             cond_allergy = "No", other_rec_act = "Yes", beach_exp_food = "Yes", 
             sand_contact = "No", household_group = "Yes") 
 
@@ -894,7 +906,7 @@ nd <- data_follow |>
             log_e_coli_max_s = seq(-2.186539, 2.281874, by = 0.2), 
             age4 = c("0-4", "5-9", "10-14", "15-19", "20+"),
             gender = c("woman/girl", "man/boy", "fluid/trans"),
-            ethnicity = "White", education2 = "bachelors", cond_GI = "No", cond_immune = "No",
+            education2 = "bachelors", cond_GI = "No", cond_immune = "No",
             cond_allergy = "No", other_rec_act = "Yes", beach_exp_food = "Yes", 
             sand_contact = "No", household_group = "Yes") 
 
@@ -929,7 +941,7 @@ nd <- data_follow |>
             log_e_coli_max_s = list$log_e_coli_max_s, 
             age4 = c("0-4", "5-9", "10-14", "15-19", "20+"),
             gender = c("woman/girl", "man/boy", "fluid/trans"),
-            ethnicity = "White", education2 = "bachelors", cond_GI = "No", cond_immune = "No",
+            education2 = "bachelors", cond_GI = "No", cond_immune = "No",
             cond_allergy = "No", other_rec_act = "Yes", beach_exp_food = "Yes", 
             sand_contact = "No", household_group = "Yes") 
 
@@ -962,7 +974,7 @@ nd <- data_follow |>
             log_e_coli_max_s = seq(-2.186539, 2.281874, by = 0.2), 
             age4 = c("0-4", "5-9", "10-14", "15-19", "20+"),
             gender = c("woman/girl", "man/boy", "fluid/trans"),
-            ethnicity = "White", education2 = "bachelors", cond_GI = "No", cond_immune = "No",
+            education2 = "bachelors", cond_GI = "No", cond_immune = "No",
             cond_allergy = "No", other_rec_act = "Yes", beach_exp_food = "Yes", 
             sand_contact = "No", household_group = "Yes") 
 
@@ -1057,7 +1069,7 @@ nd <- data_follow |>
   data_grid(log_e_coli_max_s = seq(-2.186539, 2.281874, by = 0.2), 
             age4 = c("0-4", "5-9", "10-14", "15-19", "20+"),
             gender = c("woman/girl", "man/boy", "fluid/trans"),
-            ethnicity = "White", education2 = "bachelors", cond_GI = "No", cond_immune = "No",
+            education2 = "bachelors", cond_GI = "No", cond_immune = "No",
             cond_allergy = "No", other_rec_act = "Yes", beach_exp_food = "Yes", 
             sand_contact = "No", household_group = "Yes") 
 
@@ -1094,7 +1106,7 @@ nd <- data_follow |>
             log_e_coli_max_s = list$log_e_coli_max_s, 
             age4 = c("0-4", "5-9", "10-14", "15-19", "20+"),
             gender = c("woman/girl", "man/boy", "fluid/trans"),
-            ethnicity = "White", education2 = "bachelors", cond_GI = "No", cond_immune = "No",
+            education2 = "bachelors", cond_GI = "No", cond_immune = "No",
             cond_allergy = "No", other_rec_act = "Yes", beach_exp_food = "Yes", 
             sand_contact = "No") 
 
@@ -1150,7 +1162,7 @@ nd <- data_follow |>
             log_e_coli_max_s = seq(-2.186539, 2.281874, by = 0.2), 
             age4 = c("0-4", "5-9", "10-14", "15-19", "20+"),
             gender = c("woman/girl", "man/boy", "fluid/trans"),
-            ethnicity = "White", education2 = "bachelors", cond_GI = "No", cond_immune = "No",
+            education2 = "bachelors", cond_GI = "No", cond_immune = "No",
             cond_allergy = "No", other_rec_act = "Yes", beach_exp_food = "Yes", 
             sand_contact = "No") 
 

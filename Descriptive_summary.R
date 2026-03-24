@@ -54,10 +54,17 @@ data |>
 data_follow |> tabyl(agi3)
 data_follow |> tabyl(diarrhea3)
 
-data_follow |> group_by(house_id) |> 
+data |> group_by(house_id) |> 
   mutate(n = n(), house_size = case_when(
     n == 1 ~ 1, n == 2 ~ 2, n == 3 ~ 3,
     n == 4 ~ 4, n == 5 ~ 5, n == 6 ~ 6)) |> 
+  tabyl(house_size)
+
+data |> group_by(house_id) |> 
+  mutate(n = n(), house_size = case_when(
+    n == 1 ~ 1, n == 2 ~ 2, n == 3 ~ 3,
+    n == 4 ~ 4, n == 5 ~ 5, n == 6 ~ 6)) |> 
+  filter(follow == "Yes") |> 
   tabyl(house_size)
 
 data_follow |> filter(agi3 == "Yes") |> 
@@ -72,6 +79,13 @@ data_follow |>
   tbl_summary(by = water_contact3, digits = list(all_categorical() ~ c(0, 1))) |> 
   add_overall() |>
   as_flex_table() 
+
+data_agi_cases <- data_follow |> filter(agi3 == "Yes")
+
+data_agi_cases |> tabyl(house_id) |> arrange(desc(n))
+
+data_agi_cases |> tabyl(house_id, age4) |> 
+  adorn_totals(c("row", "col"))
 
 # FIB summary stats
 
@@ -192,7 +206,20 @@ data |> group_by(date) |> ggplot(aes(x = log_mst_gull_s)) + geom_histogram()
 
 data |> group_by(date) |> ggplot(aes(x = turbidity)) + geom_histogram()
 
-# Examine FIB results by beach
+# Examine FIB results by beach and site
+
+data |>
+  ggplot(aes(x = site, y = e_coli_max, fill = site)) +
+  geom_violin() +
+  geom_boxplot(width = 0.4, color="grey", alpha = 0.2) +
+  scale_fill_viridis(discrete = TRUE) +
+  theme_minimal() +
+  labs(y = "E. coli highest single sample (CFU / 100 mL)", x = "Site") + 
+  geom_hline(yintercept = 235, linetype = "dashed", alpha = 0.5) +
+  annotate("text", x = 0.6, y = 235, 
+           label = "BAV", vjust = -0.5, size = 3.5) +
+  theme(legend.position = "none") +
+  scale_y_continuous(trans="log", breaks=c(10, 50, 100, 500, 1000))
 
 data |>
   ggplot(aes(x = beach, y = log_e_coli, fill = beach)) +

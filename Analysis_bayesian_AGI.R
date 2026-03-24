@@ -105,7 +105,7 @@ loo(m2)
 
 data_follow$ethnicity <- C(data_follow$ethnicity, contr.treatment, base=9)
 
-m3 <- brm(agi3 ~ 0 + Intercept + mo(water_contact3)*log_e_coli_s + age4 + gender + education2 + ethnicity + cond_GI + 
+m3 <- brm(agi3 ~ 0 + Intercept + mo(water_contact3)*log_e_coli_s + age4 + gender + education2 +cond_GI + 
             cond_immune + cond_allergy + other_rec_act + beach_exp_food + sand_contact + 
             (1 | beach/recruit_date/house_id),
           family = bernoulli, data = data_follow, prior = priors2,
@@ -128,7 +128,7 @@ loo(m3)
 # Examine PAV-adjusted calibration plot diagnostic
 
 y <- data_follow |> mutate(agi4 = if_else(agi3=="No", 0, 1)) |> 
-  drop_na(any_of(c("log_e_coli_s", "age4", "gender", "education2", "ethnicity", "cond_GI", 
+  drop_na(any_of(c("log_e_coli_s", "age4", "gender", "education2", "cond_GI", 
                    "other_rec_act", "beach_exp_food", "sand_contact")))
 y <- y$agi4
 yrep <- posterior_predict(m3, draws = 500)
@@ -140,7 +140,7 @@ ppc_calibration_pava(y, 0.95, yrep[1:100,])
 # Re-run model without the household cluster and instead include indicator for household size >1
 # Also add another random effect for site 
 
-m4 <- brm(agi3 ~ 0 + Intercept + mo(water_contact3)*log_e_coli_s + age4 + gender + education2 + ethnicity + cond_GI + 
+m4 <- brm(agi3 ~ 0 + Intercept + mo(water_contact3)*log_e_coli_s + age4 + gender + education2 + cond_GI + 
             cond_immune + cond_allergy + other_rec_act + beach_exp_food + sand_contact + household_group +
             (1 | site/beach/recruit_date),
           family = bernoulli, data = data_follow, prior = priors2,
@@ -160,7 +160,7 @@ fit$water_contact3
 # Examine PAV-adjusted calibration plot diagnostic
 
 y <- data_follow |> mutate(agi4 = if_else(agi3=="No", 0, 1)) |> 
-  drop_na(any_of(c("log_e_coli_s", "age4", "gender", "education2", "ethnicity", "cond_GI", 
+  drop_na(any_of(c("log_e_coli_s", "age4", "gender", "education2", "cond_GI", 
                    "other_rec_act", "beach_exp_food", "sand_contact")))
 y <- y$agi4
 yrep <- posterior_predict(m4, draws = 500)
@@ -170,7 +170,7 @@ ppc_calibration_pava(y, 0.95, yrep[1:100,])
 
 # Compare to model with highest single sample E. coli 
 
-m4.1 <- brm(agi3 ~ 0 + Intercept + mo(water_contact3)*log_e_coli_max_s + age4 + gender + education2 + ethnicity + cond_GI + 
+m4.1 <- brm(agi3 ~ 0 + Intercept + mo(water_contact3)*log_e_coli_max_s + age4 + gender + education2 + cond_GI + 
               cond_immune + cond_allergy + other_rec_act + beach_exp_food + sand_contact + household_group +
               (1 | site/beach/recruit_date),
             family = bernoulli, data = data_follow, prior = priors2,
@@ -192,7 +192,7 @@ fit$water_contact3
 # Examine PAV-adjusted calibration plot diagnostic
 
 y <- data_follow |> mutate(agi4 = if_else(agi3=="No", 0, 1)) |> 
-  drop_na(any_of(c("log_e_coli_max_s", "age4", "gender", "education2", "ethnicity", "cond_GI", 
+  drop_na(any_of(c("log_e_coli_max_s", "age4", "gender", "education2", "cond_GI", 
                    "other_rec_act", "beach_exp_food", "sand_contact")))
 y <- y$agi4
 yrep <- posterior_predict(m4.1, draws = 500)
@@ -207,7 +207,7 @@ priors_rslopes <- c(set_prior("normal(0,1.5)", class = "b"),
                     set_prior("dirichlet(c(1, 2, 3))", class = "simo", coef = "mowater_contact31"),
                     set_prior("lkj(2)", class = "cor"))
 
-m4.1r <- brm(agi3 ~ 0 + Intercept + mo(water_contact3)*log_e_coli_max_s + age4 + gender + education2 + ethnicity + cond_GI + 
+m4.1r <- brm(agi3 ~ 0 + Intercept + mo(water_contact3)*log_e_coli_max_s + age4 + gender + education2 + cond_GI + 
                cond_immune + cond_allergy + other_rec_act + beach_exp_food + sand_contact + household_group +
                (mo(water_contact3) | site/beach/recruit_date),
              family = bernoulli, data = data_follow, prior = priors_rslopes,
@@ -231,7 +231,7 @@ fit$water_contact3
 # Examine PAV-adjusted calibration plot diagnostic
 
 y <- data_follow |> mutate(agi4 = if_else(agi3=="No", 0, 1)) |> 
-  drop_na(any_of(c("log_e_coli_max_s", "age4", "gender", "education2", "ethnicity", "cond_GI", 
+  drop_na(any_of(c("log_e_coli_max_s", "age4", "gender", "education2", "cond_GI", 
                    "other_rec_act", "beach_exp_food", "sand_contact")))
 y <- y$agi4
 yrep <- posterior_predict(m4.1r, draws = 500)
@@ -245,7 +245,7 @@ variance_decomposition(m4.1r)
 
 # Compare to model with qPCR enterococci instead of E. coli
 
-m5 <- brm(agi3 ~ 0 + Intercept + mo(water_contact3)*log_entero_s + age4 + gender + education2 + ethnicity + cond_GI + 
+m5 <- brm(agi3 ~ 0 + Intercept + mo(water_contact3)*log_entero_s + age4 + gender + education2 + cond_GI + 
             cond_immune + cond_allergy + other_rec_act + beach_exp_food + sand_contact + household_group +
             (1 | site/beach/recruit_date),
           family = bernoulli, data = data_follow, prior = priors2,
@@ -263,7 +263,7 @@ conditional_effects(m5, effects = "water_contact3")
 
 # Compare to qPCR enterococci highest single sample value
 
-m5.1 <- brm(agi3 ~ 0 + Intercept + mo(water_contact3)*log_entero_max_s + age4 + gender + education2 + ethnicity + cond_GI + 
+m5.1 <- brm(agi3 ~ 0 + Intercept + mo(water_contact3)*log_entero_max_s + age4 + gender + education2 + cond_GI + 
               cond_immune + cond_allergy + other_rec_act + beach_exp_food + sand_contact + household_group +
               (1 | site/beach/recruit_date),
           family = bernoulli, data = data_follow, prior = priors2,
@@ -282,7 +282,7 @@ conditional_effects(m5.1, effects = "water_contact3")
 # Examine PAV-adjusted calibration plot diagnostic
 
 y <- data_follow |> mutate(agi4 = if_else(agi3=="No", 0, 1)) |> 
-  drop_na(any_of(c("log_entero_max_s", "age4", "gender", "education2", "ethnicity", "cond_GI", 
+  drop_na(any_of(c("log_entero_max_s", "age4", "gender", "education2", "cond_GI", 
                    "other_rec_act", "beach_exp_food", "sand_contact")))
 y <- y$agi4
 yrep <- posterior_predict(m5.1, draws = 500)
@@ -294,7 +294,7 @@ loo(m5, m5.1)
 
 # Compare to model with MST human sewage biomarker HF183 instead of E. coli
 
-m6 <- brm(agi3 ~ 0 + Intercept + mo(water_contact3)*log_mst_human_s + age4 + gender + education2 + ethnicity + cond_GI + 
+m6 <- brm(agi3 ~ 0 + Intercept + mo(water_contact3)*log_mst_human_s + age4 + gender + education2 + cond_GI + 
             cond_immune + cond_allergy + other_rec_act + beach_exp_food + sand_contact + household_group +
             (1 | site/beach/recruit_date),
           family = bernoulli, data = data_follow, prior = priors2,
@@ -311,7 +311,7 @@ conditional_effects(m6, effects = "log_mst_human_s:water_contact3")
 conditional_effects(m6, effects = "water_contact3")
 
 
-m6.1 <- brm(agi3 ~ 0 + Intercept + mo(water_contact3)*log_mst_human_max_s + age4 + gender + education2 + ethnicity + cond_GI + 
+m6.1 <- brm(agi3 ~ 0 + Intercept + mo(water_contact3)*log_mst_human_max_s + age4 + gender + education2 + cond_GI + 
               cond_immune + cond_allergy + other_rec_act + beach_exp_food + sand_contact + household_group +
               (1 | site/beach/recruit_date),
             family = bernoulli, data = data_follow, prior = priors2,
@@ -330,7 +330,7 @@ conditional_effects(m6.1, effects = "water_contact3")
 # Examine PAV-adjusted calibration plot diagnostic
 
 y <- data_follow |> mutate(agi4 = if_else(agi3=="No", 0, 1)) |> 
-  drop_na(any_of(c("log_mst_human_max_s", "age4", "gender", "education2", "ethnicity", "cond_GI", 
+  drop_na(any_of(c("log_mst_human_max_s", "age4", "gender", "education2", "cond_GI", 
                    "other_rec_act", "beach_exp_food", "sand_contact")))
 y <- y$agi4
 yrep <- posterior_predict(m6.1, draws = 500)
@@ -340,7 +340,7 @@ loo(m6, m6.1)
 
 # Given many non-detect days with 0s, check ordinal version based on quartiles
 
-m6.2 <- brm(agi3 ~ 0 + Intercept + mo(water_contact3)*mo(mst_human_max_cut) + age4 + gender + education2 + ethnicity + cond_GI + 
+m6.2 <- brm(agi3 ~ 0 + Intercept + mo(water_contact3)*mo(mst_human_max_cut) + age4 + gender + education2 + cond_GI + 
               cond_immune + cond_allergy + other_rec_act + beach_exp_food + sand_contact + household_group +
               (1 | site/beach/recruit_date),
             family = bernoulli, data = data_follow, prior = priors2,
@@ -360,7 +360,7 @@ conditional_effects(m6.2, effects = "water_contact3")
 
 # Compare to model with MST Human mitochondrial DNA marker
 
-m7 <- brm(agi3 ~ 0 + Intercept + mo(water_contact3)*log_mst_human_mt_s + age4 + gender + education2 + ethnicity + cond_GI + 
+m7 <- brm(agi3 ~ 0 + Intercept + mo(water_contact3)*log_mst_human_mt_s + age4 + gender + education2 + cond_GI + 
             cond_immune + cond_allergy + other_rec_act + beach_exp_food + sand_contact + household_group +
             (1 | site/beach/recruit_date),
           family = bernoulli, data = data_follow, prior = priors2,
@@ -376,7 +376,7 @@ pp_check(m7, type = "stat", stat = "mean")
 conditional_effects(m7, effects = "log_mst_human_mt_s:water_contact3")
 conditional_effects(m7, effects = "water_contact3")
 
-m7.1 <- brm(agi3 ~ 0 + Intercept + mo(water_contact3)*log_mst_human_mt_max_s + age4 + gender + education2 + ethnicity + cond_GI + 
+m7.1 <- brm(agi3 ~ 0 + Intercept + mo(water_contact3)*log_mst_human_mt_max_s + age4 + gender + education2 + cond_GI + 
               cond_immune + cond_allergy + other_rec_act + beach_exp_food + sand_contact + household_group +
               (1 | site/beach/recruit_date),
             family = bernoulli, data = data_follow, prior = priors2,
@@ -397,14 +397,14 @@ loo(m7, m7.1)
 # Examine PAV-adjusted calibration plot diagnostic
 
 y <- data_follow |> mutate(agi4 = if_else(agi3=="No", 0, 1)) |> 
-  drop_na(any_of(c("log_mst_human_mt_max_s", "age4", "gender", "education2", "ethnicity", "cond_GI", 
+  drop_na(any_of(c("log_mst_human_mt_max_s", "age4", "gender", "education2", "cond_GI", 
                    "other_rec_act", "beach_exp_food", "sand_contact")))
 y <- y$agi4
 yrep <- posterior_predict(m7.1, draws = 500)
 ppc_calibration_pava(y, 0.95, yrep[1:100,])
 
 
-m7.2 <- brm(agi3 ~ 0 + Intercept + mo(water_contact3)*mo(mst_human_mt_max_cut) + age4 + gender + education2 + ethnicity + cond_GI + 
+m7.2 <- brm(agi3 ~ 0 + Intercept + mo(water_contact3)*mo(mst_human_mt_max_cut) + age4 + gender + education2 + cond_GI + 
               cond_immune + cond_allergy + other_rec_act + beach_exp_food + sand_contact + household_group +
               (1 | site/beach/recruit_date),
             family = bernoulli, data = data_follow, prior = priors2,
@@ -423,7 +423,7 @@ conditional_effects(m7.2, effects = "water_contact3")
 
 ### Compare to model with MST Seagull marker 
 
-m8 <- brm(agi3 ~ 0 + Intercept + mo(water_contact3)*log_mst_gull_s + age4 + gender + education2 + ethnicity + cond_GI + 
+m8 <- brm(agi3 ~ 0 + Intercept + mo(water_contact3)*log_mst_gull_s + age4 + gender + education2 + cond_GI + 
             cond_immune + cond_allergy + other_rec_act + beach_exp_food + sand_contact + household_group +
             (1 | site/beach/recruit_date),
           family = bernoulli, data = data_follow, prior = priors2,
@@ -439,7 +439,7 @@ pp_check(m8, type = "stat", stat = "mean")
 conditional_effects(m8, effects = "log_mst_gull_s:water_contact3")
 conditional_effects(m8, effects = "water_contact3")
 
-m8.1 <- brm(agi3 ~ 0 + Intercept + mo(water_contact3)*log_mst_gull_max_s + age4 + gender + education2 + ethnicity + cond_GI + 
+m8.1 <- brm(agi3 ~ 0 + Intercept + mo(water_contact3)*log_mst_gull_max_s + age4 + gender + education2 + cond_GI + 
               cond_immune + cond_allergy + other_rec_act + beach_exp_food + sand_contact + household_group +
               (1 | site/beach/recruit_date),
             family = bernoulli, data = data_follow, prior = priors2,
@@ -458,7 +458,7 @@ conditional_effects(m8.1, effects = "water_contact3")
 # Examine PAV-adjusted calibration plot diagnostic
 
 y <- data_follow |> mutate(agi4 = if_else(agi3=="No", 0, 1)) |> 
-  drop_na(any_of(c("log_mst_gull_max_s", "age4", "gender", "education2", "ethnicity", "cond_GI", 
+  drop_na(any_of(c("log_mst_gull_max_s", "age4", "gender", "education2", "cond_GI", 
                    "other_rec_act", "beach_exp_food", "sand_contact")))
 y <- y$agi4
 yrep <- posterior_predict(m8.1, draws = 500)
@@ -469,7 +469,7 @@ loo(m8, m8.1)
 
 # Compare to turbidity model
 
-m9 <- brm(agi3 ~ 0 + Intercept + mo(water_contact3)*log_turbidity_s + age4 + gender + education2 + ethnicity + cond_GI + 
+m9 <- brm(agi3 ~ 0 + Intercept + mo(water_contact3)*log_turbidity_s + age4 + gender + education2 + cond_GI + 
             cond_immune + cond_allergy + other_rec_act + beach_exp_food + sand_contact + household_group +
             (1 | site/beach/recruit_date),
           family = bernoulli, data = data_follow, prior = priors2,
@@ -487,7 +487,7 @@ conditional_effects(m9, effects = "water_contact3")
 
 
 y <- data_follow |> mutate(agi4 = if_else(agi3=="No", 0, 1)) |> 
-  drop_na(any_of(c("log_turbidity_s", "age4", "gender", "education2", "ethnicity", "cond_GI", 
+  drop_na(any_of(c("log_turbidity_s", "age4", "gender", "education2", "cond_GI", 
                    "other_rec_act", "beach_exp_food", "sand_contact")))
 y <- y$agi4
 yrep <- posterior_predict(m9, draws = 500)
@@ -501,7 +501,7 @@ data_neg_control <- data_follow |> filter(water_contact3 == "No contact")
 priors_nc <- c(set_prior("normal(0, 1.5)", class = "b"), 
               set_prior("exponential(1)", class = "sd"))
 
-m.nc <- brm(agi3 ~ 0 + Intercept + log_e_coli_max_s + age4 + gender + education2 + ethnicity + cond_GI + 
+m.nc <- brm(agi3 ~ 0 + Intercept + log_e_coli_max_s + age4 + gender + education2 + cond_GI + 
               cond_immune + cond_allergy + other_rec_act + beach_exp_food + sand_contact + household_group +
               (1 | site/beach/recruit_date),
           family = bernoulli, data = data_neg_control, prior = priors_nc,
@@ -533,7 +533,7 @@ data_follow |> group_by(date) |> ggplot(aes(x = water_time_s)) + geom_histogram(
 priors3 <- c(set_prior("normal(0,1.5)",class= "b"),
              set_prior("exponential(1)", class = "sd"))
 
-m_watertime <- brm(agi3 ~ 0 + Intercept + water_time_s*log_e_coli_max_s + age4 + gender + education2 + ethnicity + cond_GI + 
+m_watertime <- brm(agi3 ~ 0 + Intercept + water_time_s*log_e_coli_max_s + age4 + gender + education2 + cond_GI + 
                      cond_immune + cond_allergy + other_rec_act + beach_exp_food + sand_contact + household_group +
               (1 | site/beach/recruit_date),
             family = bernoulli, data = data_follow, prior = priors3,
@@ -551,7 +551,7 @@ conditional_effects(m_watertime, effects = "water_time_s")
 
 # Alternative outcome: diarrhea
 
-m_diar <- brm(diarrhea3 ~ 0 + Intercept + mo(water_contact3)*log_e_coli_max_s + age4 + gender + education2 + ethnicity + cond_GI + 
+m_diar <- brm(diarrhea3 ~ 0 + Intercept + mo(water_contact3)*log_e_coli_max_s + age4 + gender + education2 + cond_GI + 
                 cond_immune + cond_allergy + other_rec_act + beach_exp_food + sand_contact + household_group +
                 (1 | site/beach/recruit_date),
             family = bernoulli, data = data_follow, prior = priors2,
@@ -569,7 +569,7 @@ conditional_effects(m_diar, effects = "water_contact3")
 
 # Alternative follow-up: 3 days
 
-m_3day <- brm(agi_3day ~ 0 + Intercept + mo(water_contact3)*log_e_coli_max_s + age4 + gender + education2 + ethnicity + cond_GI + 
+m_3day <- brm(agi_3day ~ 0 + Intercept + mo(water_contact3)*log_e_coli_max_s + age4 + gender + education2 + cond_GI + 
                 cond_immune + cond_allergy + other_rec_act + beach_exp_food + sand_contact + household_group +
                 (1 | site/beach/recruit_date),
               family = bernoulli, data = data_follow, prior = priors2,
@@ -588,7 +588,7 @@ conditional_effects(m_3day, effects = "water_contact3")
 
 # Alternative follow-up: 5 days
 
-m_5day <- brm(agi_5day ~ 0 + Intercept + mo(water_contact3)*log_e_coli_max_s + age4 + gender + education2 + ethnicity + cond_GI + 
+m_5day <- brm(agi_5day ~ 0 + Intercept + mo(water_contact3)*log_e_coli_max_s + age4 + gender + education2 + cond_GI + 
                 cond_immune + cond_allergy + other_rec_act + beach_exp_food + sand_contact + household_group +
                 (1 | site/beach/recruit_date),
               family = bernoulli, data = data_follow, prior = priors2,
@@ -610,7 +610,7 @@ priors_weak <- c(set_prior("normal(0,5)", class = "b"),
                  set_prior("exponential(1)", class = "sd"),
                  set_prior("dirichlet(c(1, 1, 1))", class = "simo", coef = "mowater_contact31"))
 
-m_weak <- brm(agi3 ~ 0 + Intercept + mo(water_contact3)*log_e_coli_max_s + age4 + gender + education2 + ethnicity + cond_GI + 
+m_weak <- brm(agi3 ~ 0 + Intercept + mo(water_contact3)*log_e_coli_max_s + age4 + gender + education2 + cond_GI + 
                 cond_immune + cond_allergy + other_rec_act + beach_exp_food + sand_contact + household_group +
                 (1 | site/beach/recruit_date),
                 family = bernoulli, data = data_follow, prior = priors_weak,
@@ -630,7 +630,7 @@ conditional_effects(m_weak, effects = "water_contact3")
 
 # Check model with interaction for gender
 
-m.gender <- brm(agi3 ~ 0 + Intercept + mo(water_contact3)*log_e_coli_max_s + age4 + mo(water_contact3)*gender + education2 + ethnicity + cond_GI + 
+m.gender <- brm(agi3 ~ 0 + Intercept + mo(water_contact3)*log_e_coli_max_s + age4 + mo(water_contact3)*gender + education2 + cond_GI + 
                cond_immune + cond_allergy + other_rec_act + beach_exp_food + sand_contact + household_group +
                (1 | site/beach/recruit_date),
              family = bernoulli, data = data_follow, prior = priors2,
@@ -650,7 +650,7 @@ conditional_effects(m.gender, effects = "water_contact3:gender")
 # Examine PAV-adjusted calibration plot diagnostic
 
 y <- data_follow |> mutate(agi4 = if_else(agi3=="No", 0, 1)) |> 
-  drop_na(any_of(c("log_e_coli_max_s", "age4", "gender", "education2", "ethnicity", "cond_GI", 
+  drop_na(any_of(c("log_e_coli_max_s", "age4", "gender", "education2", "cond_GI", 
                    "other_rec_act", "beach_exp_food", "sand_contact")))
 y <- y$agi4
 yrep <- posterior_predict(m.gender, draws = 500)
@@ -673,7 +673,7 @@ data_follow <- data_follow |>
   mutate(age_group = as.factor(age_group)) |> 
   mutate(age_group = fct_relevel(age_group, "Infant", "Child", "Adolescent", "Teenager", "Adult"))
 
-m.age <- brm(agi3 ~ 0 + Intercept + mo(water_contact3)*log_e_coli_max_s + mo(water_contact3)*age_group + gender + education2 + ethnicity + cond_GI + 
+m.age <- brm(agi3 ~ 0 + Intercept + mo(water_contact3)*log_e_coli_max_s + mo(water_contact3)*age_group + gender + education2 + cond_GI + 
                   cond_immune + cond_allergy + other_rec_act + beach_exp_food + sand_contact + household_group +
                   (1 | site/beach/recruit_date),
                 family = bernoulli, data = data_follow, prior = priors2,
@@ -693,7 +693,7 @@ conditional_effects(m.age, effects = "water_contact3:age_group")
 # Examine PAV-adjusted calibration plot diagnostic
 
 y <- data_follow |> mutate(agi4 = if_else(agi3=="No", 0, 1)) |> 
-  drop_na(any_of(c("log_e_coli_max_s", "age4", "gender", "education2", "ethnicity", "cond_GI", 
+  drop_na(any_of(c("log_e_coli_max_s", "age4", "gender", "education2", "cond_GI", 
                    "other_rec_act", "beach_exp_food", "sand_contact")))
 y <- y$agi4
 yrep <- posterior_predict(m.age, draws = 500)
@@ -710,8 +710,9 @@ data_house <- data_follow |> group_by(house_id, agi3) |>
   slice_sample(n=1)
 
 data_house |> tabyl(agi3)
+data_house |> tabyl(agi3, age4)
 
-m4.1.house <- brm(agi3 ~ 0 + Intercept + mo(water_contact3)*log_e_coli_max_s + age4 + gender + education2 + ethnicity + cond_GI + 
+m4.1.house <- brm(agi3 ~ 0 + Intercept + mo(water_contact3)*log_e_coli_max_s + age4 + gender + education2 + cond_GI + 
                cond_immune + cond_allergy + other_rec_act + beach_exp_food + sand_contact +
                (1 | site/beach/recruit_date),
              family = bernoulli, data = data_house, prior = priors2,
@@ -719,11 +720,7 @@ m4.1.house <- brm(agi3 ~ 0 + Intercept + mo(water_contact3)*log_e_coli_max_s + a
              backend = "cmdstanr", stan_model_args = list(stanc_options = list("O1")))
 
 summary(m4.1.house, robust = TRUE)
-get_variables(m4.1.house)
 plot(m4.1.house)
-pp_check(m4.1.house, ndraws=100)
-pp_check(m4.1.house, type = "stat", stat = "mean")
-stancode(m4.1.house)
 
 conditional_effects(m4.1.house, effects = "log_e_coli_max_s:water_contact3")
 conditional_effects(m4.1.house, effects = "water_contact3") -> fit
@@ -733,7 +730,7 @@ fit$water_contact3
 # Examine PAV-adjusted calibration plot diagnostic
 
 y <- data_house |> mutate(agi4 = if_else(agi3=="No", 0, 1)) |> 
-  drop_na(any_of(c("log_e_coli_max_s", "age4", "gender", "education2", "ethnicity", "cond_GI", 
+  drop_na(any_of(c("log_e_coli_max_s", "age4", "gender", "education2", "cond_GI", 
                    "other_rec_act", "beach_exp_food", "sand_contact")))
 y <- y$agi4
 yrep <- posterior_predict(m4.1.house, draws = 500)
