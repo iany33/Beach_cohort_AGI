@@ -26,7 +26,6 @@ data <- data |>
 data <- data |> 
     mutate(education2 = fct_relevel(education2, "high school or less")) |> 
     mutate(gender = fct_relevel(gender, "fluid/trans", after = 2)) |> 
-    mutate(ethnicity = fct_relevel(ethnicity, "White")) |> 
     mutate(age4 = fct_relevel(age4, "5-9", after = 1))
 
 data_follow <- data |> filter(follow == "Yes") 
