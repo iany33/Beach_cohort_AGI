@@ -39,7 +39,7 @@ data_follow <- data_follow |>
 # Descriptive tables
 
 data |> 
-  select(age4, gender, education2, ethnicity, water_contact2, follow) |> 
+  select(age4, gender, education2, water_contact2, follow) |> 
   tbl_summary(by = follow, digits = list(all_categorical() ~ c(0, 1))) |> 
   add_overall() |>
   as_flex_table() 
