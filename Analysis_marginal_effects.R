@@ -59,7 +59,8 @@ ggplot(pred, aes(x = draw, y = water_contact3, fill = water_contact3)) +
   scale_fill_viridis(discrete=TRUE, option = "turbo") +
   xlim(0, 100)  
 
-ggsave("Fig1.png", width = 6, height = 6, dpi = 600)
+ggsave("Fig1.png", width = 6, height = 6, dpi = 300)
+ggsave("Fig1.tif", width = 6, height = 4, units = "in", dpi = 300)
 
 # Examine marginal effects/contrast of water contact exposure effect - probability scale
 
@@ -79,11 +80,11 @@ mfx <- mfx |>
 ggplot(mfx, aes(x = draw, y = contrast, fill = contrast)) +
   stat_halfeye(slab_alpha = .5)  +
   geom_vline(xintercept = 0, linetype = "dashed") +
-  labs(x = "Water Contact Effect on AGI Incident Risk per 1000 Beachgoers", y = "") +
+  labs(x = "AGI Incident Risk per 1000 Beachgoers", y = "") +
   theme_minimal() +
   theme(legend.position = "none") +
   scale_fill_viridis(discrete=TRUE, option = "turbo") +
-  xlim(-5, 80) -> Fig2A
+  xlim(-5, 60) -> Fig2A
 
 # Check proportion of posterior that is greater than 0 and other values
 
@@ -112,7 +113,7 @@ mfx <- mfx |>
 ggplot(mfx, aes(x = draw, y = contrast, fill = contrast)) +
   stat_halfeye(slab_alpha = .5)  +
   geom_vline(xintercept = 1, linetype = "dashed") +
-  labs(x = "Risk Ratios (vs. No Water Contact)", y="") +
+  labs(x = "Risk Ratios", y="") +
   theme_minimal() +
   theme(legend.position = "none") +
   scale_fill_viridis(discrete=TRUE, option = "turbo") +
@@ -123,6 +124,7 @@ Fig2 <- Fig2A + Fig2B
 Fig2 + plot_annotation(tag_levels = 'A')
 
 ggsave("Fig2.png", width = 9, height = 4.5, dpi = 600)
+ggsave("Fig2.tif", width = 7, height = 5, units = "in", dpi = 300)
 
 remove(Fig2, Fig2A, Fig2B)
 
@@ -154,6 +156,7 @@ ggplot(mfx, aes(x = draw, y = gender, fill = gender)) +
   facet_wrap(~ contrast)
 
 ggsave("Fig3.png", width = 6, height = 6, dpi = 600)
+ggsave("Fig3.tif", width = 6, height = 6, units = "in", dpi = 300)
 
 # Age specific estimates 
 
@@ -182,6 +185,7 @@ ggplot(mfx, aes(x = draw, y = age4, fill = age4)) +
   facet_wrap(~ contrast)
 
 ggsave("Fig4.png", width = 6, height = 7, dpi = 600)
+ggsave("Fig4.tif", width = 6, height = 8, units = "in", dpi = 300)
 
 # Predicted probabilities of E. coli, conditional on water contact level
 # Sequence E. coli by range of logged, standardized and centered variable then back-transform
@@ -245,7 +249,7 @@ ggplot(pred, aes(x = log_e_coli, y = draw)) +
 ggplot(pred, aes(x = log_e_coli, y = draw)) +
   stat_lineribbon() +
   scale_fill_brewer(palette = "Blues") +
-  labs(x = "Log E. coli Highest Single Sample",
+  labs(x = "Log E. coli",
        y = "Predicted Probability of AGI",
        fill = "") +
   theme_classic() + 
@@ -328,6 +332,7 @@ ggplot(mfx, aes(x = draw, y = factor(e_coli), fill = factor(log_e_coli_max_s))) 
   xlim(-15, 100)
 
 ggsave("Fig6.png", width = 6, height = 6, dpi = 600)
+ggsave("Fig6.tif", width = 6, height = 6, units = "in", dpi = 300)
 
 # Average comparisons 
 
@@ -573,7 +578,7 @@ ggplot(pred, aes(x = log_entero_max, y = draw)) +
 ggplot(pred, aes(x = log_entero_max, y = draw)) +
   stat_lineribbon() +
   scale_fill_brewer(palette = "Blues") +
-  labs(x = "Log Enterococci Highest Single Sample",
+  labs(x = "Log Enterococci",
        y = "Predicted Probability of AGI",
        fill = "") +
   theme_classic() + 
@@ -639,12 +644,12 @@ pred <- pred |>
 ggplot(pred, aes(x = log_mst_human_mt, y = draw)) +
   stat_lineribbon() +
   scale_fill_brewer(palette = "Blues") +
-  labs(x = "Log Human Mitochondrial DNA Highest Single Sample",
+  labs(x = "Log Human Mitochondrial DNA marker",
        y = "Predicted Probability of AGI",
        fill = "") +
   theme_classic() + 
   theme(legend.position = "bottom") +
-  facet_wrap(~ water_contact3)   -> Fig_human
+  facet_wrap(~ water_contact3)   -> Fig_human_mt
 
 
 avg_comparisons(m7.1, re_formula = NA, variables = list(log_mst_human_mt_max_s = "iqr"), newdata = nd)
@@ -704,12 +709,12 @@ pred <- pred |>
 ggplot(pred, aes(x = log_mst_human, y = draw)) +
   stat_lineribbon() +
   scale_fill_brewer(palette = "Blues") +
-  labs(x = "Log Human Sewage Biomarker Highest Single Sample",
+  labs(x = "Log Human HF183 DNA marker",
        y = "Predicted Probability of AGI",
        fill = "") +
   theme_classic() + 
   theme(legend.position = "bottom") +
-  facet_wrap(~ water_contact3) -> Fig_human_mt
+  facet_wrap(~ water_contact3) -> Fig_human
 
 
 avg_comparisons(m6.1, re_formula = NA, variables = list(log_mst_human_max_s = "iqr"), newdata = nd)
@@ -767,7 +772,7 @@ pred <- pred |>
 ggplot(pred, aes(x = log_mst_gull_max, y = draw)) +
   stat_lineribbon() +
   scale_fill_brewer(palette = "Blues") +
-  labs(x = "Log MST Seagull Biomarker Highest Single Sample",
+  labs(x = "Log Seagull Gull4 DNA marker",
        y = "Predicted Probability of AGI",
        fill = "") +
   theme_classic() + 
@@ -853,7 +858,8 @@ Fig_ecoli <- Fig_ecoli + theme(legend.position = "none")
 Fig5 <- Fig_ecoli + Fig_human + Fig_human_mt + Fig_gull + Fig_entero + Fig_turbidity
 Fig5 + plot_annotation(tag_levels = 'A') + plot_layout(ncol = 2)
 
-ggsave("Fig5.png", width = 8, height = 8, dpi = 600)
+ggsave("Fig5.png", width = 10, height = 10, dpi = 600)
+ggsave("Fig5.tif", width = 8, height = 10, units = "in", dpi = 300)
 
 remove(Fig_ecoli, Fig_human, Fig_human_mt, Fig_gull, Fig_entero, Fig_turbidity)
 
