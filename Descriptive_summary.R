@@ -66,6 +66,13 @@ data |> group_by(house_id) |>
   filter(follow == "Yes") |> 
   tabyl(house_size)
 
+data |> group_by(house_id) |> 
+  mutate(n = n(), house_size = case_when(
+    n == 1 ~ 1, n == 2 ~ 2, n == 3 ~ 3,
+    n == 4 ~ 4, n == 5 ~ 5, n == 6 ~ 6)) |> 
+  filter(follow != "Yes") |> 
+  tabyl(house_size)
+
 data_follow |> filter(agi3 == "Yes") |> 
   group_by(water_contact3, agi3) |> get_summary_stats(symp_inc) 
 data_follow |> filter(agi3 == "Yes") |> 

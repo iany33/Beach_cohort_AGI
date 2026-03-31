@@ -151,7 +151,7 @@ ggplot(mfx, aes(x = draw, y = gender, fill = gender)) +
   labs(x = "Effect of Water Contact on AGI Incident Risk per 1000 Beachgoers", y = "Gender Identity") +
   theme_minimal() +
   theme(legend.position = "none") +
-  xlim(-10, 100) +
+  xlim(-10, 75) +
   scale_fill_viridis(discrete=TRUE, option = "turbo") +
   facet_wrap(~ contrast)
 
@@ -180,7 +180,7 @@ ggplot(mfx, aes(x = draw, y = age4, fill = age4)) +
   labs(x = "Effect of Water Contact on AGI Incident Risk per 1000 Beachgoers", y = "Age Group") +
   theme_minimal() +
   theme(legend.position = "none") +
-  xlim(-10, 100) +
+  xlim(-10, 75) +
   scale_fill_viridis(discrete=TRUE, option = "turbo") +
   facet_wrap(~ contrast)
 
