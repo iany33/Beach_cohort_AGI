@@ -36,12 +36,20 @@ data_follow <- data_follow |>
   mutate(water_contact3 = factor(water_contact2, ordered = T, 
                                  levels = c("No contact", "Minimal contact", "Body immersion", "Swallowed water")))
 
+# Extract day of the year for temporal effects and mean center and standardize
+
+data_follow <- data_follow |> 
+  mutate(day_of_year = yday(date))
+
+data_follow <- data_follow |> 
+  mutate(day_of_year_s = (day_of_year - mean(day_of_year, na.rm = TRUE)) / sd(day_of_year, na.rm = TRUE))
+
 # Descriptive tables
 
 data |> 
   select(age4, gender, education2, water_contact2, follow) |> 
   tbl_summary(by = follow, digits = list(all_categorical() ~ c(0, 1))) |> 
-  add_overall() |>
+  add_overall() |>  
   as_flex_table() 
 
 data |> 
@@ -49,6 +57,16 @@ data |>
   tbl_summary(by = follow, digits = list(all_categorical() ~ c(0, 1))) |> 
   add_overall() |>
   as_flex_table() 
+
+data |> tabyl(age4, follow, show_na = FALSE) |> chisq.test()
+data |> tabyl(gender, follow, show_na = FALSE) |> chisq.test()
+data |> tabyl(education2, follow, show_na = FALSE) |> chisq.test()
+data |> tabyl(water_contact2, follow, show_na = FALSE) |> chisq.test()
+data |> tabyl(cond_GI, follow, show_na = FALSE) |> chisq.test()
+data |> tabyl(other_rec_act, follow, show_na = FALSE) |> chisq.test()
+data |> tabyl(beach_exp_food, follow, show_na = FALSE) |> chisq.test()
+data |> tabyl(sand_contact, follow, show_na = FALSE) |> chisq.test()
+data |> tabyl(household_group, follow, show_na = FALSE) |> chisq.test()
 
 data_follow |> tabyl(agi3)
 data_follow |> tabyl(diarrhea3)
@@ -85,6 +103,28 @@ data_follow |>
   tbl_summary(by = water_contact3, digits = list(all_categorical() ~ c(0, 1))) |> 
   add_overall() |>
   as_flex_table() 
+
+data |> 
+  select(age4, gender, water_contact2, site, education, agi3) |> 
+  tbl_summary(by = agi3, digits = list(all_categorical() ~ c(0, 1))) |> 
+  add_overall() |>  
+  as_flex_table() 
+
+data_follow |> 
+  select(base_agi, agi2) |> 
+  tbl_summary(by = agi2, digits = list(all_categorical() ~ c(0, 1))) |> 
+  add_overall() |>  
+  as_flex_table() 
+
+data_follow |> 
+  select(water_contact, agi3) |> 
+  tbl_summary(by = water_contact, digits = list(all_categorical() ~ c(0, 1))) |> 
+  add_overall() |>  
+  as_flex_table() 
+
+data |> 
+  filter(agi3 == "Yes") |> 
+  get_summary_stats(misswork_days) 
 
 data_agi_cases <- data_follow |> filter(agi3 == "Yes")
 
